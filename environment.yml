@@ -1,0 +1,21 @@
+name: s2sml-env
+channels:
+  - conda-forge
+dependencies:
+  - python==3.10
+  - xarray
+  - dask 
+  - netCDF4 
+  - bottleneck
+  - xskillscore
+  - matplotlib
+  - jupyter
+  - ipykernel
+  - pip
+  - pip:
+    - torch
+    - segmentation-models-pytorch
+    - piqa
+    - lpips
+    - git+https://github.com/NCAR/echo-opt
+    - .
