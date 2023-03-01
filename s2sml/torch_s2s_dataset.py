@@ -280,7 +280,11 @@ class S2SDataset(Dataset):
             
             if not self.norm_pixel:
                 
-                self.mean_val = tmp.mean(skipna=True).values
+                weights = np.cos(np.deg2rad(tmp.y))
+                weights.name = "weights"
+                tmp_wght = tmp.weighted(weights)
+                
+                self.mean_val = tmp_wght.mean(skipna=True).values
                 self.std_val = tmp.std(skipna=True).values
                 
             if self.norm_pixel:
@@ -378,7 +382,7 @@ class S2SDataset(Dataset):
             
         if not cesm_help:
             
-            if np.any(ds1) and np.any(ds2):
+            if np.any(ds2):
 
                 # slicing occurs here using data above
                 ds1 = ds1.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
@@ -386,7 +390,7 @@ class S2SDataset(Dataset):
 
                 return ds1, ds2
 
-            if np.any(ds1) and not np.any(ds2):
+            if not np.any(ds2):
 
                 # slicing occurs here using data above
                 ds1 = ds1.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
