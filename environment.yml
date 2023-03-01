@@ -5,7 +5,7 @@ dependencies:
   - python==3.10
   - xarray
   - dask 
-  - netCDF4 
+  - netcdf4
   - bottleneck
   - xskillscore
   - matplotlib
