@@ -15,7 +15,8 @@ class S2SDataset(Dataset):
         week (int): lead time week (1, 2, 3, 4, 5, or 6).
         variable (str): variable (tas2m, prsfc, tas2m_anom, or prsfc_anom).
         norm (str): normalization. Defaults to zscore. Also use None, minmax, or negone.
-        region (str): region method used. Defaults 'fixed' uses one region. 'random' changes regions.
+        norm_pixel (boolean): whether to take norm on each grid cell. Defaults to False.
+        region (str): region method used. Defaults 'fixed' uses one region. 'random' is deprecated.
         minv (float): minimum value for normalization. Defaults to None.
         maxv (float): maximum value for normalization. Defaults to None.
         mnv (float): mean value for normalization. Defaults to None.
@@ -35,7 +36,7 @@ class S2SDataset(Dataset):
     
     """
     
-    def __init__(self, week, variable, norm='zscore', region='fixed',
+    def __init__(self, week, variable, norm='zscore', norm_pixel=False, region='fixed',
                  minv=None, maxv=None, mnv=None, stdv=None, lon0=None, lat0=None, dxdy=32,
                  feat_topo=True, feat_lats=True, feat_lons=True, 
                  startdt='1999-02-01', enddt='2021-12-31', homedir='/glade/scratch/molina/'):
@@ -50,33 +51,33 @@ class S2SDataset(Dataset):
         self.homedir = homedir
         self.cesm_dir = f'{self.homedir}cesm_{self.variable_}_week{self.week}/'
         self.era5_dir = f'{self.homedir}era5_{self.variable_}_week{self.week}/'
+            
+        self.region_ = region
         
+        if self.region_ == 'fixed':
+            self.lon0=lon0
+            self.lat0=lat0
+            self.dxdy=dxdy
+            
+        if self.region_ == 'random':
+            raise Exception('The random region option is deprecated. Please set to fixed.')
+            #self.dxdy=dxdy
+            #assert lon0 != None and lat0 != None, 'please set lat0 and lon0 to None'
+            
+        self.feat_topo=feat_topo
+        self.feat_lats=feat_lats
+        self.feat_lons=feat_lons
+            
         self.filelists()
         
         self.norm = norm
+        self.norm_pixel = norm_pixel
         if self.norm == 'zscore':
             self.zscore_values(mnv, stdv)
         if self.norm == 'minmax':
             self.minmax_values(minv, maxv)
         if self.norm == 'negone':
             self.minmax_values(minv, maxv)
-            
-        self.region_ = region
-        
-        if self.region_ == 'fixed':
-            
-            self.lon0=lon0
-            self.lat0=lat0
-            self.dxdy=dxdy
-            
-        if self.region_ == 'random':
-            
-            self.dxdy=dxdy
-            assert lon0 != None and lat0 != None, 'please set lat0 and lon0 to None'
-            
-        self.feat_topo=feat_topo
-        self.feat_lats=feat_lats
-        self.feat_lons=feat_lons
             
         
     def __len__(self):
@@ -154,9 +155,6 @@ class S2SDataset(Dataset):
         
         # label
         lbl = xr.concat([self.coord_data['era5']],dim='feature')
-        
-        # slice region
-        img, lbl = self.box_cutter(img, lbl)
             
         return {'input': img.transpose('feature','sample','x','y').values, 
                 'label': lbl.transpose('feature','sample','x','y').values}
@@ -277,13 +275,18 @@ class S2SDataset(Dataset):
         # if mean and standard deviation are NOT provided do this (only era5)
         if mnv == None or stdv == None:
         
-            self.mean_val = xr.open_mfdataset(
-                self.list_of_era5, concat_dim='sample', combine='nested')[var].mean(
-                skipna=True).values
-
-            self.std_val = xr.open_mfdataset(
-                self.list_of_era5, concat_dim='sample', combine='nested')[var].std(
-                skipna=True).values
+            tmp = xr.open_mfdataset(self.list_of_era5, concat_dim='sample', combine='nested')[var]
+            tmp = self.box_cutter(tmp)
+            
+            if not self.norm_pixel:
+                
+                self.mean_val = tmp.mean(skipna=True).values
+                self.std_val = tmp.std(skipna=True).values
+                
+            if self.norm_pixel:
+                
+                self.mean_val = tmp.mean('sample', skipna=True).values
+                self.std_val = tmp.std('sample', skipna=True).values
             
         # if mean and standard deviation ARE provided do this
         if mnv != None and stdv != None:
@@ -307,13 +310,18 @@ class S2SDataset(Dataset):
         # if min and max are NOT provided do this (only era5)
         if minv == None or maxv == None:
             
-            self.max_val = xr.open_mfdataset(
-                self.list_of_era5, concat_dim='sample', combine='nested')[var].max(
-                skipna=True).values
-        
-            self.min_val = xr.open_mfdataset(
-                self.list_of_era5, concat_dim='sample', combine='nested')[var].min(
-                skipna=True).values
+            tmp = xr.open_mfdataset(self.list_of_era5, concat_dim='sample', combine='nested')[var]
+            tmp = self.box_cutter(tmp)
+            
+            if not self.norm_pixel:
+                
+                self.max_val = tmp.max(skipna=True).values
+                self.min_val = tmp.min(skipna=True).values
+                
+            if self.norm_pixel:
+                
+                self.max_val = tmp.max('sample', skipna=True).values
+                self.min_val = tmp.min('sample', skipna=True).values
             
         # if min and max ARE provided do this
         if minv != None and maxv != None:
@@ -335,40 +343,59 @@ class S2SDataset(Dataset):
             var = 'anom'
             
         # coordinates (terrain and lat/lon features)
-        self.coord_data = xr.open_dataset(
-            self.homedir+'/ml_coords.nc').expand_dims('sample')
+        tmpcd = xr.open_dataset(self.homedir+'/ml_coords.nc').expand_dims('sample')
+        self.coord_data = self.box_cutter(tmpcd)
         
         # open files using lists and indices
-        self.img_train = xr.open_mfdataset(self.list_of_cesm[indx], 
-                                           concat_dim='sample', 
-                                           combine='nested')[var]
-        self.img_label = xr.open_mfdataset(self.list_of_era5[indx], 
-                                           concat_dim='sample', 
-                                           combine='nested')[var]
+        imgtr = xr.open_mfdataset(self.list_of_cesm[indx], concat_dim='sample', combine='nested')[var]
+        self.img_train = self.box_cutter(imgtr, cesm_help=True)
+        
+        imglb = xr.open_mfdataset(self.list_of_era5[indx], concat_dim='sample', combine='nested')[var]
+        self.img_label = self.box_cutter(imglb)
         
         
-    def box_cutter(self, ds1, ds2):
+    def box_cutter(self, ds1, ds2=None, cesm_help=False):
         """
         help slicing region
         """
         # if random/moving region is desired, do this
         if self.region_ == 'random':
             
+            raise Exception('The random region option is deprecated. Please set to fixed.')
+            
             # this needs to be double checked (recent change)
-            range_x = np.arange(0., 358. + 1 - self.dxdy, 1)
-            range_y = np.arange(-90., 89. + 1 - self.dxdy, 1)
+            #range_x = np.arange(0., 358. + 1 - self.dxdy, 1)
+            #range_y = np.arange(-90., 89. + 1 - self.dxdy, 1)
 
-            ax = np.random.choice(range_x, replace=False)
-            by = np.random.choice(range_y, replace=False)
+            #ax = np.random.choice(range_x, replace=False)
+            #by = np.random.choice(range_y, replace=False)
         
         # if a fixed region is desired, do this
         if self.region_ == 'fixed':
             
             ax = self.lon0
             by = self.lat0
-        
-        # slicing occurs here using data above
-        ds1 = ds1.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
-        ds2 = ds2.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
-        
-        return ds1, ds2
+            
+        if not cesm_help:
+            
+            if np.any(ds1) and np.any(ds2):
+
+                # slicing occurs here using data above
+                ds1 = ds1.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
+                ds2 = ds2.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
+
+                return ds1, ds2
+
+            if np.any(ds1) and not np.any(ds2):
+
+                # slicing occurs here using data above
+                ds1 = ds1.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
+
+                return ds1
+            
+        if cesm_help:
+            
+            # slicing occurs here using data above
+            ds1 = ds1.sel(lat=slice(by, by + self.dxdy), lon=slice(ax, ax + self.dxdy))
+
+            return ds1
