@@ -1,0 +1,688 @@
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.jobs: 1
+INFO:root:	pbs.kernel: ncar_pylib /glade/work/$USER/py37
+INFO:root:	pbs.bash: ['source ~/.bashrc; module load ncar_pylib']
+INFO:root:	pbs.batch.N: s2sml-jhayron
+INFO:root:	pbs.batch.l: ['select=1:ncpus=8:ngpus=1:mem=128GB', 'walltime=12:00:00', 'gpu_type=v100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.q: gust
+INFO:root:	pbs.batch.o: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.batch.e: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:root:	optuna.direction: minimize
+INFO:root:	optuna.metric: valid_mae
+INFO:root:	optuna.n_trials: 1000
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: TPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-06
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['None', 'minmax', 'negone', 'zscore']
+INFO:root:	optuna.parameters.trainer:weight_decay.type: loguniform
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.name: weight_decay
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.low: 1e-12
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.high: 0.001
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 4
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 256
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet', 'unet++', 'manet', 'linknet', 'fpn', 'pspnet', 'pan', 'deeplabv3', 'deeplabv3+']
+INFO:root:	optuna.parameters.model:encoder_name.type: categorical
+INFO:root:	optuna.parameters.model:encoder_name.settings.name: encoder_name
+INFO:root:	optuna.parameters.model:encoder_name.settings.choices: ['resnet18', 'resnet152', 'densenet121', 'xception', 'efficientnet-b0', 'mobilenet_v2', 'dpn68', 'vgg11']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	data.homedir: /glade/scratch/molina/
+INFO:root:	data.var: prsfc
+INFO:root:	data.wks: 2
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 250.0
+INFO:root:	data.lat0: 30
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.encoder_name: resnet18
+INFO:root:	model.encoder_weights: imagenet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 1
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_mae
+INFO:root:Submitted pbs batch job 1/1 with id 
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.jobs: 1
+INFO:root:	pbs.kernel: ncar_pylib /glade/work/$USER/py37
+INFO:root:	pbs.bash: ['source ~/.bashrc; module load ncar_pylib']
+INFO:root:	pbs.batch.N: s2sml-jhayron
+INFO:root:	pbs.batch.l: ['select=1:ncpus=8:ngpus=1:mem=128GB', 'walltime=12:00:00', 'gpu_type=v100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.o: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.batch.e: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:root:	optuna.direction: minimize
+INFO:root:	optuna.metric: valid_mae
+INFO:root:	optuna.n_trials: 1000
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: TPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-06
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['None', 'minmax', 'negone', 'zscore']
+INFO:root:	optuna.parameters.trainer:weight_decay.type: loguniform
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.name: weight_decay
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.low: 1e-12
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.high: 0.001
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 4
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 256
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet', 'unet++', 'manet', 'linknet', 'fpn', 'pspnet', 'pan', 'deeplabv3', 'deeplabv3+']
+INFO:root:	optuna.parameters.model:encoder_name.type: categorical
+INFO:root:	optuna.parameters.model:encoder_name.settings.name: encoder_name
+INFO:root:	optuna.parameters.model:encoder_name.settings.choices: ['resnet18', 'resnet152', 'densenet121', 'xception', 'efficientnet-b0', 'mobilenet_v2', 'dpn68', 'vgg11']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	data.homedir: /glade/scratch/molina/
+INFO:root:	data.var: prsfc
+INFO:root:	data.wks: 2
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 250.0
+INFO:root:	data.lat0: 30
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.encoder_name: resnet18
+INFO:root:	model.encoder_weights: imagenet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 1
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_mae
+WARNING:root:The study 'vanilla' exists in sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db.
+INFO:root:	If you want to delete the study 'vanilla' first, pass '--delete_study 1'.
+INFO:root:Checking the study for broken trials (those that did not complete 1 epoch before dying)
+INFO:root:	All trials check out!
+INFO:echo.src.reporting:Summary statistics for the current study:
+INFO:echo.src.reporting:	Total number of trials in the study: 0
+INFO:echo.src.reporting:	Requested number of trials: 1000
+INFO:root:Submitted pbs batch job 1/1 with id 
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.jobs: 1
+INFO:root:	pbs.kernel: ncar_pylib /glade/work/$USER/py37
+INFO:root:	pbs.bash: ['source ~/.bashrc; module load conda/latest;conda activate s2sml-env']
+INFO:root:	pbs.batch.N: s2sml-jhayron
+INFO:root:	pbs.batch.l: ['select=1:ncpus=8:ngpus=1:mem=128GB', 'walltime=12:00:00', 'gpu_type=v100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.o: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.batch.e: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:root:	optuna.direction: minimize
+INFO:root:	optuna.metric: valid_mae
+INFO:root:	optuna.n_trials: 1000
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: TPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-06
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['None', 'minmax', 'negone', 'zscore']
+INFO:root:	optuna.parameters.trainer:weight_decay.type: loguniform
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.name: weight_decay
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.low: 1e-12
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.high: 0.001
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 4
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 256
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet', 'unet++', 'manet', 'linknet', 'fpn', 'pspnet', 'pan', 'deeplabv3', 'deeplabv3+']
+INFO:root:	optuna.parameters.model:encoder_name.type: categorical
+INFO:root:	optuna.parameters.model:encoder_name.settings.name: encoder_name
+INFO:root:	optuna.parameters.model:encoder_name.settings.choices: ['resnet18', 'resnet152', 'densenet121', 'xception', 'efficientnet-b0', 'mobilenet_v2', 'dpn68', 'vgg11']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	data.homedir: /glade/scratch/molina/
+INFO:root:	data.var: prsfc
+INFO:root:	data.wks: 2
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 250.0
+INFO:root:	data.lat0: 30
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.encoder_name: resnet18
+INFO:root:	model.encoder_weights: imagenet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 1
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_mae
+WARNING:root:The study 'vanilla' exists in sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db.
+INFO:root:	If you want to delete the study 'vanilla' first, pass '--delete_study 1'.
+INFO:root:Checking the study for broken trials (those that did not complete 1 epoch before dying)
+INFO:root:	All trials check out!
+INFO:echo.src.reporting:Summary statistics for the current study:
+INFO:echo.src.reporting:	Total number of trials in the study: 0
+INFO:echo.src.reporting:	Requested number of trials: 1000
+INFO:root:Submitted pbs batch job 1/1 with id 
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.jobs: 1
+INFO:root:	pbs.kernel: ncar_pylib /glade/work/$USER/py37
+INFO:root:	pbs.bash: ['source ~/.bashrc; module load conda/latest;conda activate s2sml-env']
+INFO:root:	pbs.batch.N: s2sml-jhayron
+INFO:root:	pbs.batch.l: ['select=1:ncpus=8:ngpus=1:mem=128GB', 'walltime=12:00:00', 'gpu_type=v100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.o: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.batch.e: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:root:	optuna.direction: minimize
+INFO:root:	optuna.metric: valid_mae
+INFO:root:	optuna.n_trials: 1000
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: TPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-06
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['None', 'minmax', 'negone', 'zscore']
+INFO:root:	optuna.parameters.trainer:weight_decay.type: loguniform
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.name: weight_decay
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.low: 1e-12
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.high: 0.001
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 4
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 256
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet', 'unet++', 'manet', 'linknet', 'fpn', 'pspnet', 'pan', 'deeplabv3', 'deeplabv3+']
+INFO:root:	optuna.parameters.model:encoder_name.type: categorical
+INFO:root:	optuna.parameters.model:encoder_name.settings.name: encoder_name
+INFO:root:	optuna.parameters.model:encoder_name.settings.choices: ['resnet18', 'resnet152', 'densenet121', 'xception', 'efficientnet-b0', 'mobilenet_v2', 'dpn68', 'vgg11']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	data.homedir: /glade/gust/scratch/molina/
+INFO:root:	data.var: prsfc
+INFO:root:	data.wks: 2
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 250.0
+INFO:root:	data.lat0: 30
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.encoder_name: resnet18
+INFO:root:	model.encoder_weights: imagenet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 1
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_mae
+WARNING:root:The study 'vanilla' exists in sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db.
+INFO:root:	If you want to delete the study 'vanilla' first, pass '--delete_study 1'.
+INFO:root:Checking the study for broken trials (those that did not complete 1 epoch before dying)
+INFO:root:	All trials check out!
+INFO:echo.src.reporting:Summary statistics for the current study:
+INFO:echo.src.reporting:	Total number of trials in the study: 0
+INFO:echo.src.reporting:	Requested number of trials: 1000
+INFO:root:Submitted pbs batch job 1/1 with id 
+INFO:root:Running as __main__
+INFO:root:Importing custom objective from /glade/u/home/jhayron/s2sml/applications/train.py
+WARNING:echo.src.reporting:The gpu is not responding to a call from nvidia-smi.                Setting device = cpu, but this may fail. Command '['nvidia-smi', '--query-gpu=memory.free', '--format=csv,nounits,noheader']' returned non-zero exit status 9.
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: minimize
+INFO:root:Using metric valid_mae
+INFO:root:Loaded study vanilla located at sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db
+INFO:echo.src.base_objective:Worker 0 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric valid_mae
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/trial_results.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 12:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : None
+INFO:echo.src.base_objective:	model:name : pan
+INFO:echo.src.base_objective:	model:encoder_name : resnet152
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.008988328951476544
+INFO:echo.src.base_objective:	trainer:train_batch_size : 132
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.2437625058731124e-08
+INFO:echo.src.base_objective:	trainer:training_loss : mae
+INFO:echo.src.base_objective:Beginning trial 0
+INFO:root:Loading model pan with settings {'encoder_name': 'resnet152', 'encoder_weights': 'imagenet', 'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+WARNING:root:Pruning trial 0 due to encoder/encoder weights mismatch: Given input size: (1x1x1). Calculated output size: (1x0x0). Output size is too small.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : None
+INFO:echo.src.base_objective:	model:name : pan
+INFO:echo.src.base_objective:	model:encoder_name : efficientnet-b0
+INFO:echo.src.base_objective:	optimizer:learning_rate : 3.9653890814816296e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 183
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.9896520710489735e-05
+INFO:echo.src.base_objective:	trainer:training_loss : xtanh
+INFO:echo.src.base_objective:Beginning trial 1
+INFO:root:Loading model pan with settings {'encoder_name': 'efficientnet-b0', 'encoder_weights': 'imagenet', 'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+WARNING:root:Pruning trial 1 due to encoder/encoder weights mismatch: Given input size: (1x1x1). Calculated output size: (1x0x0). Output size is too small.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : linknet
+INFO:echo.src.base_objective:	model:encoder_name : efficientnet-b0
+INFO:echo.src.base_objective:	optimizer:learning_rate : 2.247024747891568e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 11
+INFO:echo.src.base_objective:	trainer:weight_decay : 3.013293702848347e-12
+INFO:echo.src.base_objective:	trainer:training_loss : smooth
+INFO:echo.src.base_objective:Beginning trial 2
+INFO:root:Loading model linknet with settings {'encoder_name': 'efficientnet-b0', 'encoder_weights': 'imagenet', 'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.jobs: 1
+INFO:root:	pbs.kernel: ncar_pylib /glade/work/$USER/py37
+INFO:root:	pbs.bash: ['source ~/.bashrc; module load conda/latest;conda activate s2sml-env']
+INFO:root:	pbs.batch.N: s2sml-jhayron
+INFO:root:	pbs.batch.l: ['select=1:ncpus=8:ngpus=1:mem=128GB', 'walltime=12:00:00', 'gpu_type=v100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.q: main
+INFO:root:	pbs.batch.o: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.batch.e: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:root:	optuna.direction: minimize
+INFO:root:	optuna.metric: valid_mae
+INFO:root:	optuna.n_trials: 1000
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: TPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-06
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['None', 'minmax', 'negone', 'zscore']
+INFO:root:	optuna.parameters.trainer:weight_decay.type: loguniform
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.name: weight_decay
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.low: 1e-12
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.high: 0.001
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 4
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 256
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet', 'unet++', 'manet', 'linknet', 'fpn', 'pspnet', 'pan', 'deeplabv3', 'deeplabv3+']
+INFO:root:	optuna.parameters.model:encoder_name.type: categorical
+INFO:root:	optuna.parameters.model:encoder_name.settings.name: encoder_name
+INFO:root:	optuna.parameters.model:encoder_name.settings.choices: ['resnet18', 'resnet152', 'densenet121', 'xception', 'efficientnet-b0', 'mobilenet_v2', 'dpn68', 'vgg11']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	data.homedir: /glade/gust/scratch/molina/
+INFO:root:	data.var: prsfc
+INFO:root:	data.wks: 2
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 250.0
+INFO:root:	data.lat0: 30
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.encoder_name: resnet18
+INFO:root:	model.encoder_weights: imagenet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 1
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_mae
+WARNING:root:The study 'vanilla' exists in sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db.
+INFO:root:	If you want to delete the study 'vanilla' first, pass '--delete_study 1'.
+INFO:root:Checking the study for broken trials (those that did not complete 1 epoch before dying)
+INFO:root:	All trials check out!
+INFO:echo.src.reporting:Summary statistics for the current study:
+INFO:echo.src.reporting:	Total number of trials in the study: 3
+INFO:echo.src.reporting:	Trials with state 2: 2
+INFO:echo.src.reporting:	Trials with state 0: 1
+INFO:echo.src.reporting:	Requested number of trials: 1000
+INFO:echo.src.reporting:	...
+INFO:echo.src.reporting:	Total study simulation run time: 0.0217 hrs
+INFO:echo.src.reporting:	Average trial simulation run time: 0.0109 hrs
+INFO:echo.src.reporting:	The longest trial took 0.0131 hrs
+INFO:echo.src.reporting:	Estimated remaining simulation time needed: 10.8512 hrs
+INFO:echo.src.reporting:	With a given wall-time of 12:00:00, submit 1 PBS workers to complete the study
+INFO:root:Submitted pbs batch job 1/1 with id 
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.jobs: 1
+INFO:root:	pbs.bash: ['source ~/.bashrc; module load conda/latest;conda activate s2sml-env']
+INFO:root:	pbs.batch.N: s2sml-jhayron
+INFO:root:	pbs.batch.l: ['select=1:ncpus=8:ngpus=1:mem=128GB', 'walltime=12:00:00', 'gpu_type=a100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.q: main
+INFO:root:	pbs.batch.o: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.batch.e: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:root:	optuna.direction: minimize
+INFO:root:	optuna.metric: valid_mae
+INFO:root:	optuna.n_trials: 1000
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: TPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-06
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['None', 'minmax', 'negone', 'zscore']
+INFO:root:	optuna.parameters.trainer:weight_decay.type: loguniform
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.name: weight_decay
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.low: 1e-12
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.high: 0.001
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 4
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 256
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet', 'unet++', 'manet', 'linknet', 'fpn', 'pspnet', 'pan', 'deeplabv3', 'deeplabv3+']
+INFO:root:	optuna.parameters.model:encoder_name.type: categorical
+INFO:root:	optuna.parameters.model:encoder_name.settings.name: encoder_name
+INFO:root:	optuna.parameters.model:encoder_name.settings.choices: ['resnet18', 'resnet152', 'densenet121', 'xception', 'efficientnet-b0', 'mobilenet_v2', 'dpn68', 'vgg11']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	data.homedir: /glade/gust/scratch/molina/
+INFO:root:	data.var: prsfc
+INFO:root:	data.wks: 2
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 250.0
+INFO:root:	data.lat0: 30
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.encoder_name: resnet18
+INFO:root:	model.encoder_weights: imagenet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 1
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_mae
+WARNING:root:The study 'vanilla' exists in sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db.
+INFO:root:	If you want to delete the study 'vanilla' first, pass '--delete_study 1'.
+INFO:root:Checking the study for broken trials (those that did not complete 1 epoch before dying)
+INFO:root:	All trials check out!
+INFO:echo.src.reporting:Summary statistics for the current study:
+INFO:echo.src.reporting:	Total number of trials in the study: 3
+INFO:echo.src.reporting:	Trials with state 2: 2
+INFO:echo.src.reporting:	Trials with state 0: 1
+INFO:echo.src.reporting:	Requested number of trials: 1000
+INFO:echo.src.reporting:	...
+INFO:echo.src.reporting:	Total study simulation run time: 0.0217 hrs
+INFO:echo.src.reporting:	Average trial simulation run time: 0.0109 hrs
+INFO:echo.src.reporting:	The longest trial took 0.0131 hrs
+INFO:echo.src.reporting:	Estimated remaining simulation time needed: 10.8512 hrs
+INFO:echo.src.reporting:	With a given wall-time of 12:00:00, submit 1 PBS workers to complete the study
+INFO:root:Submitted pbs batch job 1/1 with id 15488.gusched01
+INFO:root:Running on PBS/SLURM batch id: 15488.gusched01
+INFO:root:Importing custom objective from /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: minimize
+INFO:root:Using metric valid_mae
+INFO:root:Loaded study vanilla located at sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db
+INFO:echo.src.base_objective:Worker 15488.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric valid_mae
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/trial_results/trial_results_15488.gusched01.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 12:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : deeplabv3+
+INFO:echo.src.base_objective:	model:encoder_name : vgg11
+INFO:echo.src.base_objective:	optimizer:learning_rate : 1.0946399004829233e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 181
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.1486765098991346e-09
+INFO:echo.src.base_objective:	trainer:training_loss : xsigmoid
+INFO:echo.src.base_objective:Beginning trial 3
+WARNING:root:Trial 3 failed due to error: [Errno 2] No such file or directory: b'/glade/scratch/molina/era5_prsfc_week2/e5_prsfc_19990201.nc'.
+WARNING:root:Died due to due to error [Errno 2] No such file or directory: b'/glade/scratch/molina/era5_prsfc_week2/e5_prsfc_19990201.nc'
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.jobs: 1
+INFO:root:	pbs.kernel: ncar_pylib /glade/work/$USER/py37
+INFO:root:	pbs.bash: ['source ~/.bashrc; module load conda/latest;conda activate s2sml-env']
+INFO:root:	pbs.batch.N: s2sml-jhayron
+INFO:root:	pbs.batch.l: ['select=1:ncpus=8:ngpus=1:mem=128GB', 'walltime=12:00:00', 'gpu_type=a100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.q: main
+INFO:root:	pbs.batch.o: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	pbs.batch.e: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:root:	optuna.direction: minimize
+INFO:root:	optuna.metric: valid_mae
+INFO:root:	optuna.n_trials: 1000
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: TPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-06
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['None', 'minmax', 'negone', 'zscore']
+INFO:root:	optuna.parameters.trainer:weight_decay.type: loguniform
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.name: weight_decay
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.low: 1e-12
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.high: 0.001
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 4
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 256
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet', 'unet++', 'manet', 'linknet', 'fpn', 'pspnet', 'pan', 'deeplabv3', 'deeplabv3+']
+INFO:root:	optuna.parameters.model:encoder_name.type: categorical
+INFO:root:	optuna.parameters.model:encoder_name.settings.name: encoder_name
+INFO:root:	optuna.parameters.model:encoder_name.settings.choices: ['resnet18', 'resnet152', 'densenet121', 'xception', 'efficientnet-b0', 'mobilenet_v2', 'dpn68', 'vgg11']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:	data.homedir: /glade/gust/scratch/molina/
+INFO:root:	data.var: prsfc
+INFO:root:	data.wks: 2
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 250.0
+INFO:root:	data.lat0: 30
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.encoder_name: resnet18
+INFO:root:	model.encoder_weights: imagenet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 1
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_mae
+WARNING:root:The study 'vanilla' exists in sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db.
+INFO:root:	If you want to delete the study 'vanilla' first, pass '--delete_study 1'.
+INFO:root:Checking the study for broken trials (those that did not complete 1 epoch before dying)
+INFO:root:	All trials check out!
+INFO:echo.src.reporting:Summary statistics for the current study:
+INFO:echo.src.reporting:	Total number of trials in the study: 4
+INFO:echo.src.reporting:	Trials with state 2: 2
+INFO:echo.src.reporting:	Trials with state 0: 1
+INFO:echo.src.reporting:	Trials with state 3: 1
+INFO:echo.src.reporting:	Requested number of trials: 1000
+INFO:echo.src.reporting:	...
+INFO:echo.src.reporting:	Total study simulation run time: 0.0223 hrs
+INFO:echo.src.reporting:	Average trial simulation run time: 0.0074 hrs
+INFO:echo.src.reporting:	The longest trial took 0.0131 hrs
+INFO:echo.src.reporting:	Estimated remaining simulation time needed: 7.4216 hrs
+INFO:echo.src.reporting:	With a given wall-time of 12:00:00, submit 1 PBS workers to complete the study
+INFO:root:Submitted pbs batch job 1/1 with id 15489.gusched01
+INFO:root:Running on PBS/SLURM batch id: 15489.gusched01
+INFO:root:Importing custom objective from /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: minimize
+INFO:root:Using metric valid_mae
+INFO:root:Loaded study vanilla located at sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db
+INFO:echo.src.base_objective:Worker 15489.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric valid_mae
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/trial_results/trial_results_15489.gusched01.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 12:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : deeplabv3
+INFO:echo.src.base_objective:	model:encoder_name : mobilenet_v2
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.004107318301795315
+INFO:echo.src.base_objective:	trainer:train_batch_size : 94
+INFO:echo.src.base_objective:	trainer:weight_decay : 0.0008273580984327254
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 4
+WARNING:root:Trial 4 failed due to error: [Errno 2] No such file or directory: b'/glade/scratch/molina/era5_prsfc_week2/e5_prsfc_19990201.nc'.
+WARNING:root:Died due to due to error [Errno 2] No such file or directory: b'/glade/scratch/molina/era5_prsfc_week2/e5_prsfc_19990201.nc'

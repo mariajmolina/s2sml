@@ -1,0 +1,12 @@
+LICENSE
+README.md
+setup.py
+s2sml/__init__.py
+s2sml/load_loss.py
+s2sml/load_model.py
+s2sml/torch_funcs.py
+s2sml/torch_s2s_dataset.py
+s2sml.egg-info/PKG-INFO
+s2sml.egg-info/SOURCES.txt
+s2sml.egg-info/dependency_links.txt
+s2sml.egg-info/top_level.txt

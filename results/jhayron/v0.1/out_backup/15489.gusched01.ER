@@ -1,0 +1,87 @@
+/var/spool/pbs/mom_priv/jobs/15489.gusched01.SC: line 10: /glade/u/home/jhayron/.bashrc: No such file or directory
+/var/spool/pbs/mom_priv/jobs/15489.gusched01.SC: line 11: ncar_pylib: command not found
+2023-03-01 11:20:04.567628: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-03-01 11:20:14.919128: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /opt/cray/libfabric/1.15.0.0/lib64:/opt/cray/pe/mpich/8.1.21/ofi/crayclang/10.0/lib
+2023-03-01 11:20:14.922277: I tensorflow/compiler/xla/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2023-03-01 11:20:30.303971: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer.so.7'; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /opt/cray/libfabric/1.15.0.0/lib64:/opt/cray/pe/mpich/8.1.21/ofi/crayclang/10.0/lib
+2023-03-01 11:20:30.329572: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer_plugin.so.7'; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /opt/cray/libfabric/1.15.0.0/lib64:/opt/cray/pe/mpich/8.1.21/ofi/crayclang/10.0/lib
+2023-03-01 11:20:30.329608: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+INFO:root:Saving trial details to /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out
+INFO:root:Running on PBS/SLURM batch id: 15489.gusched01
+INFO:root:Importing custom objective from /glade/u/home/jhayron/s2sml/applications/train.py
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: minimize
+INFO:root:Using metric valid_mae
+[32m[I 2023-03-01 11:21:18,912][0m Using an existing study with name 'vanilla' instead of creating a new one.[0m
+INFO:root:Loaded study vanilla located at sqlite:////glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/s2s.db
+INFO:echo.src.base_objective:Worker 15489.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric valid_mae
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/u/home/jhayron/s2sml/results/jhayron/v0.1/out/trial_results/trial_results_15489.gusched01.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 12:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : deeplabv3
+INFO:echo.src.base_objective:	model:encoder_name : mobilenet_v2
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.004107318301795315
+INFO:echo.src.base_objective:	trainer:train_batch_size : 94
+INFO:echo.src.base_objective:	trainer:weight_decay : 0.0008273580984327254
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 4
+WARNING:root:Trial 4 failed due to error: [Errno 2] No such file or directory: b'/glade/scratch/molina/era5_prsfc_week2/e5_prsfc_19990201.nc'.
+[33m[W 2023-03-01 11:21:22,296][0m Trial 4 failed with parameters: {'learning_rate': 0.004107318301795315, 'norm': 'minmax', 'weight_decay': 0.0008273580984327254, 'train_batch_size': 94, 'training_loss': 'logcosh', 'model_name': 'deeplabv3', 'encoder_name': 'mobilenet_v2'} because of the following error: FileNotFoundError(2, 'No such file or directory').[0m
+Traceback (most recent call last):
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/file_manager.py", line 210, in _acquire_with_cache_info
+    file = self._cache[self._key]
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/lru_cache.py", line 56, in __getitem__
+    value = self._cache[key]
+KeyError: [<class 'netCDF4._netCDF4.Dataset'>, ('/glade/scratch/molina/era5_prsfc_week2/e5_prsfc_19990201.nc',), 'r', (('clobber', True), ('diskless', False), ('format', 'NETCDF4'), ('persist', False)), 'f8daee2d-3dd5-4843-a98e-5a7da62127ee']
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/optuna/study/_optimize.py", line 200, in _run_trial
+    value_or_values = func(trial)
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/echo/src/base_objective.py", line 168, in __call__
+    result = self.train(trial, conf)
+  File "/glade/u/home/jhayron/s2sml/applications/train.py", line 400, in train
+    raise E
+  File "/glade/u/home/jhayron/s2sml/applications/train.py", line 381, in train
+    return trainer(conf, trial=trial, verbose=False)
+  File "/glade/u/home/jhayron/s2sml/applications/train.py", line 179, in trainer
+    train = torch_s2s_dataset.S2SDataset(
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/s2sml/torch_s2s_dataset.py", line 60, in __init__
+    self.minmax_values(minv, maxv)
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/s2sml/torch_s2s_dataset.py", line 310, in minmax_values
+    self.max_val = xr.open_mfdataset(
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/api.py", line 983, in open_mfdataset
+    datasets = [open_(p, **open_kwargs) for p in paths]
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/api.py", line 983, in <listcomp>
+    datasets = [open_(p, **open_kwargs) for p in paths]
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/api.py", line 526, in open_dataset
+    backend_ds = backend.open_dataset(
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 577, in open_dataset
+    store = NetCDF4DataStore.open(
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 382, in open
+    return cls(manager, group=group, mode=mode, lock=lock, autoclose=autoclose)
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 329, in __init__
+    self.format = self.ds.data_model
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 391, in ds
+    return self._acquire()
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 385, in _acquire
+    with self._manager.acquire_context(needs_lock) as root:
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/file_manager.py", line 198, in acquire_context
+    file, cached = self._acquire_with_cache_info(needs_lock)
+  File "/glade/work/jhayron/conda-envs/s2sml-env/lib/python3.10/site-packages/xarray/backends/file_manager.py", line 216, in _acquire_with_cache_info
+    file = self._opener(*self._args, **kwargs)
+  File "src/netCDF4/_netCDF4.pyx", line 2463, in netCDF4._netCDF4.Dataset.__init__
+  File "src/netCDF4/_netCDF4.pyx", line 2026, in netCDF4._netCDF4._ensure_nc_success
+FileNotFoundError: [Errno 2] No such file or directory: b'/glade/scratch/molina/era5_prsfc_week2/e5_prsfc_19990201.nc'
+[33m[W 2023-03-01 11:21:22,380][0m Trial 4 failed with value None.[0m
+WARNING:root:Died due to due to error [Errno 2] No such file or directory: b'/glade/scratch/molina/era5_prsfc_week2/e5_prsfc_19990201.nc'

@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: s2sml
+Version: 0.1
+Summary: Machine learning for s2s prediction
+Home-page: https://github.com/mariajmolina/s2sml
+Author: Maria Molina
+Author-email: molina@ucar.edu
+License: MIT
+License-File: LICENSE
