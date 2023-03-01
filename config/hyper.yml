@@ -1,5 +1,5 @@
 log: True
-save_path: "/glade/work/schreck/repos/ML-for-S2S/results/echo_precip_test"
+save_path: "/glade/work/schreck/repos/s2sml/results/"
 
 pbs:
   jobs: 10
@@ -10,14 +10,14 @@ pbs:
     l: ["select=1:ncpus=8:ngpus=1:mem=128GB", "walltime=12:00:00", "gpu_type=v100"]
     A: "NAML0001"
     q: "casper"
-    o: "/glade/work/schreck/repos/ML-for-S2S/results/echo_precip_test/out"
-    e: "/glade/work/schreck/repos/ML-for-S2S/results/echo_precip_test/out"
+    o: "/glade/work/schreck/repos/s2sml/results/out"
+    e: "/glade/work/schreck/repos/s2sml/results/out"
     
 optuna:
   storage: "s2s.db"
   study_name: "vanilla"
   storage_type: "sqlite"
-  objective: "/glade/work/schreck/repos/ML-for-S2S/applications/train.py"
+  objective: "/glade/work/schreck/repos/s2sml/applications/train.py"
   direction: "minimize"
   metric: "valid_mae"
   n_trials: 1000
@@ -36,7 +36,8 @@ optuna:
         low: 1.0e-06
         high: 1.0e-02
     data:norm:
-        type: "categorical"
+      type: "categorical"
+      settings:
         name: "norm"
         choices: ["None", "minmax", "negone", "zscore"]
     trainer:weight_decay:
@@ -55,7 +56,7 @@ optuna:
       type: "categorical"
       settings:
         name: "training_loss"
-        choices: ["mae", "mse", "smooth", "logcosh", "xtanh", "xsigmoid"]
+        choices: ["mae", "mse", "smooth", "logcosh", "xtanh", "xsigmoid", "huber"]
     model:name:
       type: "categorical"
       settings:
