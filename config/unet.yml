@@ -1,7 +1,7 @@
 seed: 1000
-save_loc: "/glade/work/schreck/repos/s2sml/results/echo_precip"
+save_loc: "/home/hntckkv2/s2sml/results/"
 data:
-    homedir: '/glade/scratch/molina/'
+    homedir: '/home/aiforprediction/molina/'
     var: "prsfc" # 
     wks: 2
     dxdy: 31  # dxdy-1 
