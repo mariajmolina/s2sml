@@ -1,0 +1,72 @@
+log: True
+save_path: "/home/hntckkv2/s2sml/results/kjm/"
+
+slurm:
+  jobs: 1
+  bash: ["source ~/.bashrc; conda load s2sml-env"]
+  batch:
+    J: "s2s"
+    mem: "128GB"
+    n: 8
+    t: "12:00:00"
+    partition: "gpu"
+    ntasks: 1
+    nodes: 1
+    gres: gpu:1
+    # q: "casper"
+    o: "/home/hntckkv2/s2sml/results/kjm/out"
+    e: "/home/hntckkv2/s2sml/results/kjm/out"
+    
+optuna:
+  storage: "s2s.db"
+  study_name: "vanilla"
+  storage_type: "sqlite"
+  objective: "/home/hntckkv2/s2sml/applications/train.py"
+  direction: "minimize"
+  metric: "valid_mae"
+  n_trials: 1000
+  gpu: True
+  sampler:
+    type: "TPESampler"
+    n_startup_trials: 100
+  pruner:
+    type: "MedianPruner"
+    n_startup_trials: 50
+  parameters:
+    optimizer:learning_rate:
+      type: "loguniform"
+      settings:
+        name: "learning_rate"
+        low: 1.0e-06
+        high: 1.0e-02
+    data:norm:
+        type: "categorical"
+        name: "norm"
+        choices: ["None", "minmax", "negone", "zscore"]
+    trainer:weight_decay:
+      type: "loguniform"
+      settings:
+        name: "weight_decay"
+        low: 1.0e-12
+        high: 1.0e-03
+    trainer:train_batch_size:
+      type: "int"
+      settings:
+        name: "train_batch_size"
+        low: 4
+        high: 256
+    trainer:training_loss:
+      type: "categorical"
+      settings:
+        name: "training_loss"
+        choices: ["mae", "mse", "smooth", "logcosh", "xtanh", "xsigmoid"]
+    model:name:
+      type: "categorical"
+      settings:
+        name: "model_name"
+        choices: ["unet", "unet++", "manet", "linknet", "fpn", "pspnet", "pan", "deeplabv3", "deeplabv3+"]
+    model:encoder_name:
+      type: "categorical"
+      settings:
+        name: "encoder_name"
+        choices: ["resnet18", "resnet152", "densenet121", "xception", "efficientnet-b0", "mobilenet_v2", "dpn68", "vgg11"]
