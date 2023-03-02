@@ -1,0 +1,69 @@
+log: True
+save_path: "/glade/work/kdagon/s2sml/results/" # changed path
+
+pbs:
+  jobs: 2 # changed jobs
+  #kernel: "ncar_pylib /glade/work/$USER/py37" # KD: commented out this line
+  bash: ["source ~/.bashrc; module load conda; conda activate s2sml-env"] # KD: modified to module load conda and conda activate $ENV
+  batch:
+    N: "s2sml-kdagon" # changed name
+    l: ["select=1:ncpus=4:ngpus=1:mem=32GB", "walltime=2:00:00", "gpu_type=a100"] # changed resource request
+    A: "ACGD0007" # changed account number
+    q: "main" # changed queue for gust
+    o: "/glade/work/kdagon/s2sml/results/out" # changed path
+    e: "/glade/work/kdagon/s2sml/results/err" # changed path
+    
+optuna:
+  storage: "s2s.db"
+  study_name: "vanilla"
+  storage_type: "sqlite"
+  objective: "/glade/work/kdagon/s2sml/applications/train.py" # changed path
+  direction: "minimize"
+  metric: "valid_mae"
+  n_trials: 10 # changed number of trials
+  gpu: True
+  sampler:
+    type: "TPESampler"
+    n_startup_trials: 100
+  pruner:
+    type: "MedianPruner"
+    n_startup_trials: 50
+  parameters:
+    optimizer:learning_rate:
+      type: "loguniform"
+      settings:
+        name: "learning_rate"
+        low: 1.0e-05 # changed
+        high: 1.0e-02
+    data:norm:
+      type: "categorical"
+      settings:
+        name: "norm"
+        choices: ["minmax", "zscore"] # changed options
+    #trainer:weight_decay: # commented out
+    #  type: "loguniform"
+    #  settings:
+    #    name: "weight_decay"
+    #    low: 1.0e-12
+    #    high: 1.0e-03
+    trainer:train_batch_size:
+      type: "int"
+      settings:
+        name: "train_batch_size"
+        low: 16 # changed
+        high: 64 # changed
+    trainer:training_loss:
+      type: "categorical"
+      settings:
+        name: "training_loss"
+        choices: ["mae", "mse", "smooth", "logcosh", "xtanh", "xsigmoid", "huber"]
+    model:name:
+      type: "categorical"
+      settings:
+        name: "model_name"
+        choices: ["unet"]
+    #model:encoder_name: # commented out due to connection errors / lack of internet on Gust compute nodes
+    #  type: "categorical"
+    #  settings:
+    #    name: "encoder_name"
+    #    choices: ["resnet18", "resnet152", "densenet121", "xception", "efficientnet-b0", "mobilenet_v2", "dpn68", "vgg11"]
