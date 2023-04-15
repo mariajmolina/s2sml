@@ -1,21 +1,36 @@
 name: s2sml-env
 channels:
+  - pytorch
+  - nvidia
   - conda-forge
+  - defaults
+  - r
 dependencies:
-  - python==3.10
-  - xarray
-  - dask 
-  - netcdf4
-  - bottleneck
-  - xskillscore
-  - matplotlib
-  - jupyter
-  - ipykernel
-  - pip
+  - bottleneck=1.3.7
+  - dask=2023.3.2
+  - ipykernel=6.22.0
+  - jupyter=1.0.0
+  - matplotlib=3.7.1
+  - netcdf4=1.6.0
+  - pip=23.0.1
+  - python=3.10.9
+  - pytorch=2.0.0
+  - pytorch-cuda=11.7
+  - torchaudio=2.0.0
+  - torchvision=0.15.0
+  - xarray=2023.3.0
+  - xesmf=0.7.1
+  - xskillscore=0.0.24
   - pip:
-    - torch
-    - segmentation-models-pytorch
-    - piqa
-    - lpips
-    - git+https://github.com/NCAR/echo-opt
-    - .
+      - alembic==1.10.3
+      - cmaes==0.9.1
+      - colorlog==6.7.0
+      - echo-opt==1.0.2
+      - greenlet==2.0.2
+      - mako==1.2.4
+      - optuna==3.1.0
+      - pyqt5-sip==12.11.0
+      - sqlalchemy==2.0.9
+      - tqdm==4.65.0
+      - xgboost==1.7.5
+      - .
