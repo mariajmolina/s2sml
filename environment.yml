@@ -16,7 +16,6 @@ dependencies:
   - python=3.10.9
   - pytorch=2.0.0
   - pytorch-cuda=11.7
-  - torchaudio=2.0.0
   - torchvision=0.15.0
   - xarray=2023.3.0
   - xesmf=0.7.1
@@ -27,9 +26,12 @@ dependencies:
       - colorlog==6.7.0
       - echo-opt==1.0.2
       - greenlet==2.0.2
+      - lpips==0.1.4
       - mako==1.2.4
       - optuna==3.1.0
+      - piqa==1.3.0
       - pyqt5-sip==12.11.0
+      - segmentation-models-pytorch==0.3.2
       - sqlalchemy==2.0.9
       - tqdm==4.65.0
       - xgboost==1.7.5
