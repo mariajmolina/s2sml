@@ -425,12 +425,13 @@ def trainer(conf, trial=False, verbose=True):
         if verbose:
             df.to_csv(f"{save_loc}/training_log{str(int(trial.number))}.csv", index=False)
         
+        # had to comment out due to multi-obj optimization not available in optuna yet
         # update the echo trial
-        if trial:
+        #if trial:
             # update trails using the (single) defined metric from yml file (important!)
-            trial.report(results_dict[metric][-1], step=epoch)
-            if trial.should_prune():
-                raise optuna.TrialPruned()
+            #trial.report(results_dict[metric][-1], step=epoch)
+            #if trial.should_prune():
+            #    raise optuna.TrialPruned()
         
         # anneal the learning rate using just the (single) metric
         lr_scheduler.step(results_dict[metric][-1])
