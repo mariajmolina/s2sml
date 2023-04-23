@@ -740,10 +740,12 @@ def corrcoef(pred, target):
     val_to_return = (pred_n * target_n).sum()
     
     # don't want to minimize negative values!
-    if val_to_return <= 0.0:
-        val_to_return = val_to_return * -0.0001
-    
-    return val_to_return
+    if val_to_return < 0.0:
+        print('we have a negative!')
+        return (pred_n * target_n).sum() * (-0.0001)
+        
+    elif val_to_return >= 0.0:
+        return (pred_n * target_n).sum()
 
 
 def weighted_mse_loss(output, label, lat_weights, reduction='sum'):
