@@ -1,3 +1,4 @@
+import traceback
 import numpy as np
 import pandas as pd
 
@@ -24,12 +25,15 @@ from s2sml.load_model import load_model
 import gc
 from piqa import SSIM
 
-
+#print('loading cuda')
 is_cuda = torch.cuda.is_available()
 device = torch.device(torch.cuda.current_device()) if is_cuda else torch.device("cpu")
 
 
 def seed_everything(seed=1234):
+    """
+    Set the seeds for stuff
+    """
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
@@ -41,6 +45,10 @@ def seed_everything(seed=1234):
 
 
 class SSIMLoss(SSIM):
+    """
+    Structural Similarity Index
+    Its a perceptual metric to measure similarity of two images
+    """
     def forward(self, x, y):
         try:
             return super().forward(x, y).item()
@@ -49,6 +57,9 @@ class SSIMLoss(SSIM):
 
 
 def reverse_negone(ds, minv, maxv):
+    """
+    Reversal of the negative one to positive one scaling
+    """
     return (((ds + 1) / 2) * (maxv - minv)) + minv
 
 
@@ -60,35 +71,50 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
         model (torch): pytorch neural network.
         dataloader (torch): pytorch dataloader.
     """
+    # set the model to train mode
     model.train()
-
+    
+    # setting the running metrics to zero
     running_loss = 0.0
     corrcoef_loss = 0.0
     corrcoef_true = 0.0
-
+    
+    # loop through data in the loader
     for data in dataloader:
-
+        
+        # grab the data input features
         img_noisy = data["input"].squeeze(dim=2)
         img_noisy = img_noisy.to(device, dtype=torch.float)
-
+        
+        # grab the data labels
         img_label = data["label"].squeeze(dim=2)
         img_label = img_label.to(device, dtype=torch.float)
-
+        
+        # set the gradients to zero
         optimizer.zero_grad()
+        
+        # predict using the model
         outputs = model(img_noisy)
-
+        
+        # measure the loss with model output vs labels
         loss = criterion(outputs, img_label)
+        
+        # correlation coefficient measurement for the model output vs labels
         closs = torch_funcs.corrcoef(outputs, img_label)
+        # correlation coefficient measurement for the raw input vs labels
         tloss = torch_funcs.corrcoef(img_noisy[:, nc - 1 : nc, :, :], img_label)
-
+        
+        # update weights
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step()
-
+        
+        # update metrics
         running_loss += loss.item()
         corrcoef_loss += closs.item()
         corrcoef_true += tloss.item()
-
+        
+    # updates
     train_loss = running_loss / len(dataloader)
     coef_loss = corrcoef_loss / len(dataloader)
     coef_true = corrcoef_true / len(dataloader)
@@ -96,7 +122,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
     # clear the cached memory from the gpu
     torch.cuda.empty_cache()
     gc.collect()
-
+    
     return train_loss, coef_loss, coef_true
 
 
@@ -109,25 +135,36 @@ def validate(model, dataloader, criterion, metrics, nc):
         model: pytorch neural network.
         dataloader: pytorch dataloader.
     """
+    # set model to eval mode
     model.eval()
-
+    
+    # setting running metrics to zero
     running_loss = 0.0
     corrcoef_loss = 0.0
     corrcoef_true = 0.0
+    
+    # grab the metrics dictionary
     metrics_dict = defaultdict(list)
-
+    
+    # loop thru data in loader
     for i, data in enumerate(dataloader):
-
+        
+        # load input features
         img_noisy = data["input"].squeeze(dim=2)
         img_noisy = img_noisy.to(device, dtype=torch.float)
-
+        
+        # load labels
         img_label = data["label"].squeeze(dim=2)
         img_label = img_label.to(device, dtype=torch.float)
-
+        
+        # predict the model output
         outputs = model(img_noisy)
-
+        
+        # evaluate the model output vs labels
         loss = criterion(outputs, img_label)
+        # evaluate correlation coefficient of model output vs labels
         closs = torch_funcs.corrcoef(outputs, img_label)
+        # evaluate correlation coefficient of cesm vs labels
         tloss = torch_funcs.corrcoef(img_noisy[:, nc - 1 : nc, :, :], img_label)
 
         for k, v in metrics.items():
@@ -138,27 +175,32 @@ def validate(model, dataloader, criterion, metrics, nc):
             except AttributeError:  # AttributeError
                 # print(v(outputs, img_label))
                 metrics_dict[k].append(v(outputs, img_label))
-
+                
+        # update metrics
         running_loss += loss.item()
         corrcoef_loss += closs.item()
         corrcoef_true += tloss.item()
-
+        
+    # update running metrics
     val_loss = running_loss / len(dataloader)
     coef_loss = corrcoef_loss / len(dataloader)
     coef_true = corrcoef_true / len(dataloader)
+    
+    # place stuff in dictionary
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
 
     return val_loss, coef_loss, coef_true, metrics_dict
 
 
 def trainer(conf, trial=False, verbose=True):
-
+    
     seed = 1000 if "seed" not in conf else conf["seed"]
     seed_everything(seed)
 
     # Trainer params
     train_batch_size = conf["trainer"]["train_batch_size"]
     valid_batch_size = conf["trainer"]["valid_batch_size"]
+    
     epochs = conf["trainer"]["epochs"]
     batches_per_epoch = conf["trainer"]["batches_per_epoch"]
 
@@ -166,11 +208,18 @@ def trainer(conf, trial=False, verbose=True):
     stopping_patience = conf["trainer"]["stopping_patience"]
     nc = conf["model"]["in_channels"]
     metric = conf["trainer"]["metric"]
+    
+    save_loc = conf["save_loc"]
+    os.makedirs(save_loc, exist_ok=True)
+    if not os.path.join(save_loc, "model.yml"):
+        shutil.copyfile(config, os.path.join(save_loc, "model.yml"))
+        
+    homedir = conf["data"]["homedir"]
 
     # Data
     var = conf["data"]["var"]
     wks = conf["data"]["wks"]
-    homedir = conf["data"]["homedir"]
+    
     dxdy = conf["data"]["dxdy"]
     lat0 = conf["data"]["lat0"]
     lon0 = conf["data"]["lon0"]
@@ -231,6 +280,7 @@ def trainer(conf, trial=False, verbose=True):
         enddt="2017-12-31",
         homedir=homedir,
     )
+    
     tests = torch_s2s_dataset.S2SDataset(
         week=wks,
         variable=var,
@@ -250,6 +300,7 @@ def trainer(conf, trial=False, verbose=True):
         enddt="2020-12-31",
         homedir=homedir,
     )
+    
     train_loader = DataLoader(
         train, batch_size=train_batch_size, shuffle=True, drop_last=True
     )
@@ -259,8 +310,7 @@ def trainer(conf, trial=False, verbose=True):
     tests_loader = DataLoader(
         tests, batch_size=valid_batch_size, shuffle=False, drop_last=False
     )
-
-    # Model
+    
     model = load_model(conf["model"]).to(device)
 
     # Optimizer
@@ -272,7 +322,7 @@ def trainer(conf, trial=False, verbose=True):
 
     # Loss
     train_loss = load_loss(conf["trainer"]["loss"]).to(device)
-    valid_loss = torch.nn.L1Loss().to(device)
+    valid_loss = load_loss(conf["trainer"]["loss"]).to(device)
 
     # Metrics
     validation_metrics = {
@@ -280,57 +330,76 @@ def trainer(conf, trial=False, verbose=True):
         "rmse": torch.nn.MSELoss().to(device),
         "ssim": SSIMLoss(n_channels=1).to(device).eval(),
     }
-
-    # Load schedulers
+    
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, patience=lr_patience, verbose=verbose, min_lr=1.0e-13
     )
-    # lr_scheduler = CosineAnnealingWarmupRestarts(
-    #     optimizer,
-    #     first_cycle_steps=batches_per_epoch,
-    #     cycle_mult=1.0,
-    #     max_lr=learning_rate,
-    #     min_lr=1e-3 * learning_rate,
-    #     warmup_steps=50,
-    #     gamma=0.8,
-    # )
-
+    
     # Train and validate
     results_dict = defaultdict(list)
+    
     for epoch in list(range(epochs)):
-
+        
         t_loss, t_corr, t_true = train_one_epoch(
             model, train_loader, optimizer, train_loss, nc
         )
         v_loss, v_corr, v_true, metrics = validate(
             model, valid_loader, valid_loss, validation_metrics, nc
         )
+        e_loss, e_corr, e_true, emetrics = validate(
+            model, tests_loader, valid_loss, validation_metrics, nc
+        )
 
         assert np.isfinite(v_loss), "Something is wrong, the validation loss is NaN"
-
+        
+        # place metrics from the training and validation in the dictionary to save out
+        # the epoch
         results_dict["epoch"].append(epoch)
+        
+        # the train loss and correlation value
         results_dict["train_loss"].append(t_loss)
         results_dict["train_corr"].append(t_corr)
-        results_dict["valid_mae"].append(v_loss)
+        results_dict["tcesm_corr"].append(t_true)
+        results_dict["train_custom"].append(t_true / t_corr)
+        
+        # the validation loss and corr value
+        results_dict["valid_loss"].append(v_loss)
         results_dict["valid_corr"].append(v_corr)
+        results_dict["vcesm_corr"].append(v_true)
+        results_dict["valid_custom"].append(v_true / v_corr)
+        
+        # other metrics computed from the validation set
         for k, v in metrics.items():
             results_dict[f"valid_{k}"].append(v)
+        
+        # the test/evaluation loss and corr value
+        results_dict["evals_loss"].append(e_loss)
+        results_dict["evals_corr"].append(e_corr)
+        results_dict["ecesm_corr"].append(e_true)
+        results_dict["evals_custom"].append(e_true / e_corr)
+        
+        # other metrics computed from the tests/evaluation set
+        for k, v in emetrics.items():
+            results_dict[f"evals_{k}"].append(v)
+        
+        # save the learning rate
         results_dict["lr"].append(optimizer.param_groups[0]["lr"])
 
         # Save the dataframe to disk
         df = pd.DataFrame.from_dict(results_dict).reset_index()
         if verbose:
-            df.to_csv(f"{save_loc}/training_log.csv", index=False)
-
+            df.to_csv(f"{save_loc}/training_log{str(int(trial.number))}.csv", index=False)
+        
         # update the echo trial
         if trial:
+            # update trails using the defined metric from yml file (important!)
             trial.report(results_dict[metric][-1], step=epoch)
             if trial.should_prune():
                 raise optuna.TrialPruned()
-
-        # anneal the learning rate using just the box metric
+        
+        # anneal the learning rate using just the metric
         lr_scheduler.step(results_dict[metric][-1])
-
+        
         # save the best model (only if not using echo)
         if results_dict[metric][-1] == min(results_dict[metric]) and trial is False:
             state_dict = {
@@ -341,7 +410,7 @@ def trainer(conf, trial=False, verbose=True):
             }
             torch.save(state_dict, f"{save_loc}/best.pt")
 
-        # Stop training if we have not improved after X epochs
+        # Stop training if we have not improved after X epochs based on the defined metric
         best_epoch = [
             i
             for i, j in enumerate(results_dict[metric])
@@ -361,10 +430,13 @@ def trainer(conf, trial=False, verbose=True):
 
     if trial is False:
         return pd.DataFrame.from_dict(results_dict).reset_index()
-
+    
+    # the best epoch is based on the chosen metric!
     best_epoch = [
         i for i, j in enumerate(results_dict[metric]) if j == min(results_dict[metric])
     ][0]
+    
+    # return the results from the respective dictionary
     results = {k: v[best_epoch] for k, v in results_dict.items()}
 
     return results
@@ -377,26 +449,36 @@ class Objective(BaseObjective):
         BaseObjective.__init__(self, config, metric, device)
 
     def train(self, trial, conf):
+        
         try:
-            return trainer(conf, trial=trial, verbose=False)
+            return trainer(conf, trial=trial, verbose=True)
+        
         except Exception as E:
+            
             if "CUDA" in str(E) or "cuDNN" in str(E):
                 logging.warning(
                     f"Pruning trial {trial.number} due to CUDA memory overflow: {str(E)}."
                 )
+                logging.warning(traceback.print_tb(E.__traceback__))
                 raise optuna.TrialPruned()
+                
             elif "Xception" in str(E) or "VGG" in str(E) or "Given input size:" in str(E) or "downsampling" in str(E):
                 logging.warning(
                     f"Pruning trial {trial.number} due to encoder/encoder weights mismatch: {str(E)}."
                 )
+                logging.warning(traceback.print_tb(E.__traceback__))
                 raise optuna.TrialPruned()
+                
             elif "reraise" in str(E):
                 logging.warning(
                     f"Pruning trial {trial.number} due to unspecified error: {str(E)}."
                 )
+                logging.warning(traceback.print_tb(E.__traceback__))
                 raise optuna.TrialPruned()
+                
             else:
                 logging.warning(f"Trial {trial.number} failed due to error: {str(E)}.")
+                logging.warning(traceback.print_tb(E.__traceback__))
                 raise E
 
 
@@ -439,7 +521,7 @@ if __name__ == "__main__":
         print("Usage: python train_mlp.py model.yml")
         sys.exit()
 
-    # ### Set up logger to print stuff
+    # Set up logger to print stuff
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
@@ -449,16 +531,12 @@ if __name__ == "__main__":
     ch.setLevel(logging.INFO)
     ch.setFormatter(formatter)
     root.addHandler(ch)
-
-    # ### Load the configuration and get the relevant variables
+    
+    # Load the configuration and get the relevant variables
     config = sys.argv[1]
     with open(config) as cf:
         conf = yaml.load(cf, Loader=yaml.FullLoader)
-
-    save_loc = conf["save_loc"]
-    os.makedirs(save_loc, exist_ok=True)
-    if not os.path.join(save_loc, "model.yml"):
-        shutil.copyfile(config, os.path.join(save_loc, "model.yml"))
-
+    
     results = trainer(conf)
+    
     print(results)
