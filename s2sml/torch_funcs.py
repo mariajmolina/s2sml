@@ -741,7 +741,7 @@ def corrcoef(pred, target):
     
     # don't want to minimize negative values!
     if val_to_return <= 0.0:
-        val_to_return = 0.0001
+        val_to_return = val_to_return * -0.0001
     
     return val_to_return
 
