@@ -220,7 +220,7 @@ def trainer(conf, trial=False, verbose=True):
     lr_patience = conf["trainer"]["lr_patience"]
     stopping_patience = conf["trainer"]["stopping_patience"]
     nc = conf["model"]["in_channels"]
-    metric = conf["trainer"]["metric"][0]
+    metric = conf["trainer"]["metric"]
     
     save_loc = conf["save_loc"]
     os.makedirs(save_loc, exist_ok=True)
