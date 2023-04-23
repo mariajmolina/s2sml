@@ -741,7 +741,7 @@ def corrcoef(pred, target):
     
     # don't want to minimize negative values!
     if val_to_return < 0.0:
-        print('we have a negative!')
+        print('we have a negative!', val_to_return)
         return (pred_n * target_n).sum() * (-0.0001)
         
     elif val_to_return >= 0.0:

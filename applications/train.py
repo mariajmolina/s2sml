@@ -127,7 +127,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
 
 
 @torch.no_grad()
-def validate(model, dataloader, criterion, metrics, nc):
+def validate(model, dataloader, criterion, metrics, second_metrics, nc):
     """
     Validation function.
 
@@ -145,6 +145,7 @@ def validate(model, dataloader, criterion, metrics, nc):
     
     # grab the metrics dictionary
     metrics_dict = defaultdict(list)
+    second_metrics_dict = defaultdict(list)
     
     # loop thru data in loader
     for i, data in enumerate(dataloader):
@@ -167,14 +168,25 @@ def validate(model, dataloader, criterion, metrics, nc):
         # evaluate correlation coefficient of cesm vs labels
         tloss = torch_funcs.corrcoef(img_noisy[:, nc - 1 : nc, :, :], img_label)
 
+        # ml model output eval
         for k, v in metrics.items():
             try:
                 metrics_dict[k].append(
                     v(outputs, img_label).cpu().numpy().mean().item()
                 )
             except AttributeError:  # AttributeError
-                # print(v(outputs, img_label))
                 metrics_dict[k].append(v(outputs, img_label))
+                
+        # cesm eval
+        for k, v in second_metrics.items():
+            try:
+                second_metrics_dict[k].append(
+                    v(img_noisy[:, nc - 1 : nc, :, :], 
+                      img_label).cpu().numpy().mean().item()
+                )
+            except AttributeError:  # AttributeError
+                second_metrics_dict[k].append(v(img_noisy[:, nc - 1 : nc, :, :], 
+                                                img_label))
                 
         # update metrics
         running_loss += loss.item()
@@ -188,8 +200,9 @@ def validate(model, dataloader, criterion, metrics, nc):
     
     # place stuff in dictionary
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
+    second_metrics_dict = {k: np.mean(v) for k, v in second_metrics_dict.items()}
 
-    return val_loss, coef_loss, coef_true, metrics_dict
+    return val_loss, coef_loss, coef_true, metrics_dict, second_metrics_dict
 
 
 def trainer(conf, trial=False, verbose=True):
@@ -207,7 +220,7 @@ def trainer(conf, trial=False, verbose=True):
     lr_patience = conf["trainer"]["lr_patience"]
     stopping_patience = conf["trainer"]["stopping_patience"]
     nc = conf["model"]["in_channels"]
-    metric = conf["trainer"]["metric"]
+    metric = conf["trainer"]["metric"][0]
     
     save_loc = conf["save_loc"]
     os.makedirs(save_loc, exist_ok=True)
@@ -328,7 +341,15 @@ def trainer(conf, trial=False, verbose=True):
     validation_metrics = {
         "perc": lpips.LPIPS(net="alex").to(device),
         "rmse": torch.nn.MSELoss().to(device),
+        "mae":  torch.nn.L1Loss().to(device),
         "ssim": SSIMLoss(n_channels=1).to(device).eval(),
+    }
+    # metrics for the baseline data (cesm)
+    validation_metrics_cesm = {
+        "cesm_perc": lpips.LPIPS(net="alex").to(device),
+        "cesm_rmse": torch.nn.MSELoss().to(device),
+        "cesm_mae":  torch.nn.L1Loss().to(device),
+        "cesm_ssim": SSIMLoss(n_channels=1).to(device).eval(),
     }
     
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -343,11 +364,11 @@ def trainer(conf, trial=False, verbose=True):
         t_loss, t_corr, t_true = train_one_epoch(
             model, train_loader, optimizer, train_loss, nc
         )
-        v_loss, v_corr, v_true, metrics = validate(
-            model, valid_loader, valid_loss, validation_metrics, nc
+        v_loss, v_corr, v_true, metrics, cesm_metrics = validate(
+            model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, nc
         )
-        e_loss, e_corr, e_true, emetrics = validate(
-            model, tests_loader, valid_loss, validation_metrics, nc
+        e_loss, e_corr, e_true, emetrics, cesm_emetrics = validate(
+            model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, nc
         )
 
         assert np.isfinite(v_loss), "Something is wrong, the validation loss is NaN"
@@ -371,6 +392,13 @@ def trainer(conf, trial=False, verbose=True):
         # other metrics computed from the validation set
         for k, v in metrics.items():
             results_dict[f"valid_{k}"].append(v)
+        for k, v in cesm_metrics.items():
+            results_dict[f"valid_{k}"].append(v)
+        
+        results_dict["valid_custom_second"].append(
+            results_dict["valid_rmse"][-1] / results_dict["valid_cesm_rmse"][-1])
+        results_dict["valid_custom_third"].append(
+            results_dict["valid_mae"][-1] / results_dict["valid_cesm_mae"][-1])
         
         # the test/evaluation loss and corr value
         results_dict["evals_loss"].append(e_loss)
@@ -381,6 +409,13 @@ def trainer(conf, trial=False, verbose=True):
         # other metrics computed from the tests/evaluation set
         for k, v in emetrics.items():
             results_dict[f"evals_{k}"].append(v)
+        for k, v in cesm_emetrics.items():
+            results_dict[f"evals_{k}"].append(v)
+        
+        results_dict["evals_custom_second"].append(
+            results_dict["evals_rmse"][-1] / results_dict["evals_cesm_rmse"][-1])
+        results_dict["evals_custom_third"].append(
+            results_dict["evals_mae"][-1] / results_dict["evals_cesm_mae"][-1])
         
         # save the learning rate
         results_dict["lr"].append(optimizer.param_groups[0]["lr"])
@@ -392,12 +427,12 @@ def trainer(conf, trial=False, verbose=True):
         
         # update the echo trial
         if trial:
-            # update trails using the defined metric from yml file (important!)
+            # update trails using the (single) defined metric from yml file (important!)
             trial.report(results_dict[metric][-1], step=epoch)
             if trial.should_prune():
                 raise optuna.TrialPruned()
         
-        # anneal the learning rate using just the metric
+        # anneal the learning rate using just the (single) metric
         lr_scheduler.step(results_dict[metric][-1])
         
         # save the best model (only if not using echo)
@@ -431,7 +466,7 @@ def trainer(conf, trial=False, verbose=True):
     if trial is False:
         return pd.DataFrame.from_dict(results_dict).reset_index()
     
-    # the best epoch is based on the chosen metric!
+    # the best epoch is based on the single chosen metric!
     best_epoch = [
         i for i, j in enumerate(results_dict[metric]) if j == min(results_dict[metric])
     ][0]
