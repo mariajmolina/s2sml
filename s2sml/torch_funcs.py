@@ -732,16 +732,23 @@ def corrcoef(pred, target):
     # https://forum.numer.ai/t/custom-loss-functions-for-xgboost-using-pytorch/960
     
     """
-    pred[pred==1] = 0.999
-    pred[pred==-1] = -0.999
-
     pred_n = pred - pred.mean()
     target_n = target - target.mean()
-    pred_n = pred_n / pred_n.norm()
+
+    pred_norm = pred_n.norm() 
+
+    # if predictions are constant, norm would be zero, and correlation would be infinitely small, corrected by 0.0001
+    if pred_norm == 0: 
+        val_to_return = pred_norm.clone()
+        print('we have constant predictions!')
+        val_to_return[val_to_return==0] = 0.0001
+        return val_to_return
+
+    pred_n = pred_n / pred_norm  
     target_n = target_n / target_n.norm()
-    
-    val_to_return = (pred_n * target_n).sum()
-    
+
+    val_to_return = (pred_n * target_n).sum() 
+
     # don't want to minimize negative values!
     if val_to_return < 0.0:
         print('we have a negative!', val_to_return)
@@ -749,7 +756,6 @@ def corrcoef(pred, target):
         
     elif val_to_return >= 0.0:
         return (pred_n * target_n).sum()
-
 
 def weighted_mse_loss(output, label, lat_weights, reduction='sum'):
     """
