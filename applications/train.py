@@ -98,7 +98,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
         outputs[outputs==1] = 0.999 # in order to avoid correlation being None
         outputs[outputs==-1] = -0.999 # in order to avoid correlation being None
 
-        # measure the loss with model output vs labels
+        # measure the loss with model output vs labels:
         loss = criterion(outputs, img_label)
         
         # correlation coefficient measurement for the model output vs labels
@@ -162,8 +162,6 @@ def validate(model, dataloader, criterion, metrics, second_metrics, nc):
         
         # predict the model output
         outputs = model(img_noisy)
-        outputs[outputs==1] = 0.999 # in order to avoid correlation being None
-        outputs[outputs==-1] = -0.999 # in order to avoid correlation being None
 
         # evaluate the model output vs labels
         loss = criterion(outputs, img_label)
