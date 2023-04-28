@@ -102,9 +102,9 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
         loss = criterion(outputs, img_label)
         
         # correlation coefficient measurement for the model output vs labels
-        closs = torch_funcs.corrcoef(outputs, img_label)
+        closs = torch_funcs.corrcoef(outputs.clone(), img_label)
         # correlation coefficient measurement for the raw input vs labels
-        tloss = torch_funcs.corrcoef(img_noisy[:, nc - 1 : nc, :, :], img_label)
+        tloss = torch_funcs.corrcoef(img_noisy.clone()[:, nc - 1 : nc, :, :], img_label)
         
         # update weights
         loss.backward()
@@ -168,9 +168,9 @@ def validate(model, dataloader, criterion, metrics, second_metrics, nc):
         # evaluate the model output vs labels
         loss = criterion(outputs, img_label)
         # evaluate correlation coefficient of model output vs labels
-        closs = torch_funcs.corrcoef(outputs, img_label)
+        closs = torch_funcs.corrcoef(outputs.clone(), img_label)
         # evaluate correlation coefficient of cesm vs labels
-        tloss = torch_funcs.corrcoef(img_noisy[:, nc - 1 : nc, :, :], img_label)
+        tloss = torch_funcs.corrcoef(img_noisy.clone()[:, nc - 1 : nc, :, :], img_label)
 
         # ml model output eval
         for k, v in metrics.items():

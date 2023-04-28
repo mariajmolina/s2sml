@@ -732,6 +732,9 @@ def corrcoef(pred, target):
     # https://forum.numer.ai/t/custom-loss-functions-for-xgboost-using-pytorch/960
     
     """
+    pred[pred==1] = 0.999
+    pred[pred==-1] = -0.999
+
     pred_n = pred - pred.mean()
     target_n = target - target.mean()
     pred_n = pred_n / pred_n.norm()
