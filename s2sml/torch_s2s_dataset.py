@@ -275,7 +275,13 @@ class S2SDataset(Dataset):
         # if mean and standard deviation are NOT provided do this (only era5)
         if mnv == None or stdv == None:
         
+            # open file
             tmp = xr.open_mfdataset(self.list_of_era5, concat_dim='sample', combine='nested')[var]
+            
+            # need to convert precip cesm file
+            if self.variable_ == 'prsfc':
+                tmp = tmp * 84600 # convert kg/m2/s to mm/day
+                
             tmp = self.box_cutter(tmp)
             
             if not self.norm_pixel:
@@ -314,7 +320,13 @@ class S2SDataset(Dataset):
         # if min and max are NOT provided do this (only era5)
         if minv == None or maxv == None:
             
+            # open file
             tmp = xr.open_mfdataset(self.list_of_era5, concat_dim='sample', combine='nested')[var]
+            
+            # need to convert precip cesm file
+            if self.variable_ == 'prsfc':
+                tmp = tmp * 84600 # convert kg/m2/s to mm/day
+            
             tmp = self.box_cutter(tmp)
             
             if not self.norm_pixel:
