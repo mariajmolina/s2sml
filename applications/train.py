@@ -1,17 +1,16 @@
-import os
-import sys
-import yaml
-import logging
 import traceback
-import random
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 import torch
 from torch.utils.data import DataLoader
-import lpips
 
+import lpips
+import logging
+import sys
+import yaml
+import random
+import os
 from echo.src.base_objective import BaseObjective
 from collections import defaultdict
 
@@ -69,12 +68,8 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
     Training function.
 
     Args:
-        model (torch): pytorch neural network
-        dataloader (torch): pytorch dataloader
-        optimizer: training optimizer
-        criterion: loss function
-        nc: number of channels
-        clip: clipping of gradients, defaults to 1.0
+        model (torch): pytorch neural network.
+        dataloader (torch): pytorch dataloader.
     """
     # set the model to train mode
     model.train()
@@ -132,22 +127,13 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
 
 
 @torch.no_grad()
-def validate(model, dataloader, criterion, metrics, second_metrics, 
-             nc, epoch, trial_num, save_loc, data_split="valid"):
+def validate(model, dataloader, criterion, metrics, second_metrics, nc):
     """
     Validation function.
 
     Args:
-        model: pytorch neural network
-        dataloader: pytorch dataloader
-        criterion: loss function
-        metrics: additional metrics for skill assessment
-        second_metrics: metrics for input data (e.g., data to be bias corrected)
-        nc: number of channels
-        epoch: current epoch number
-        trial_num: number of trial in optuna study
-        save_loc: location to save figures
-        data_split: validation or test data, for figure saving; defaults to valid
+        model: pytorch neural network.
+        dataloader: pytorch dataloader.
     """
     # set model to eval mode
     model.eval()
@@ -174,41 +160,6 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         
         # predict the model output
         outputs = model(img_noisy)
-        
-        # save figs for later reference
-        # selecting random sample in batch to visualize
-        a_inp = img_noisy.cpu().detach().numpy()[:,nc-1,:,:]
-        print(int(a_inp.shape[0]))
-        samp_ = np.random.choice(np.arange(0,int(a_inp.shape[0]),1))
-        
-        # change plt logging level otherwise get a lot of debug output
-        plt.set_loglevel(level='warning')
-        
-        # input
-        im = plt.imshow(a_inp[samp_])
-        plt.colorbar(im)
-        plt.savefig(
-            f"{save_loc}/trial{str(trial_num)}/{data_split}_inp_{str(epoch)}_{str(trial_num)}.png", 
-            bbox_inches='tight')
-        plt.close()
-        
-        # output
-        b_out = outputs.cpu().detach().numpy()[:,0,:,:][samp_]
-        im = plt.imshow(b_out)
-        plt.colorbar(im)
-        plt.savefig(
-            f"{save_loc}/trial{str(trial_num)}/{data_split}_out_{str(epoch)}_{str(trial_num)}.png", 
-            bbox_inches='tight')
-        plt.close()
-        
-        # label
-        c_lbl = img_label.cpu().detach().numpy()[:,0,:,:][samp_]
-        im = plt.imshow(c_lbl)
-        plt.colorbar(im)
-        plt.savefig(
-            f"{save_loc}/trial{str(trial_num)}/{data_split}_lbl_{str(epoch)}_{str(trial_num)}.png", 
-            bbox_inches='tight')
-        plt.close()
 
         # evaluate the model output vs labels
         loss = criterion(outputs, img_label)
@@ -408,21 +359,16 @@ def trainer(conf, trial=False, verbose=True):
     # Train and validate
     results_dict = defaultdict(list)
     
-    # folder to save trial items
-    os.makedirs(save_loc+"/trial"+str(int(trial.number)), exist_ok=True)
-    
     for epoch in list(range(epochs)):
         
         t_loss, t_corr, t_true = train_one_epoch(
             model, train_loader, optimizer, train_loss, nc
         )
         v_loss, v_corr, v_true, metrics, cesm_metrics = validate(
-            model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, int(trial.number), save_loc, data_split="valid"
+            model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, nc
         )
         e_loss, e_corr, e_true, emetrics, cesm_emetrics = validate(
-            model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, int(trial.number), save_loc, data_split="eval"
+            model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, nc
         )
 
         assert np.isfinite(v_loss), "Something is wrong, the validation loss is NaN"
