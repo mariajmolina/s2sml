@@ -737,7 +737,8 @@ def corrcoef(pred, target):
 
     pred_norm = pred_n.norm() 
 
-    # if predictions are constant, norm would be zero, and correlation would be infinitely small, corrected by 0.0001
+    # if predictions are constant, norm would be zero, 
+    # and correlation would be infinitely small, corrected by 0.0001
     if pred_norm == 0: 
         val_to_return = pred_norm.clone()
         print('we have constant predictions!')
@@ -756,6 +757,7 @@ def corrcoef(pred, target):
         
     elif val_to_return >= 0.0:
         return (pred_n * target_n).sum()
+
 
 def weighted_mse_loss(output, label, lat_weights, reduction='sum'):
     """
