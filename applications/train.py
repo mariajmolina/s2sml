@@ -290,6 +290,8 @@ def trainer(conf, trial=False, verbose=True):
     gen_img = conf["img_gen"]
     if gen_img:
         img_iters = conf["img_iter"]
+    if not gen_img:
+        img_iters = None
 
     # Data
     var = conf["data"]["var"]
