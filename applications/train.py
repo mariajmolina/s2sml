@@ -421,8 +421,9 @@ def trainer(conf, trial=False, verbose=True):
     # Train and validate
     results_dict = defaultdict(list)
     
-    # folder to save trial items
-    os.makedirs(save_loc+"/trial"+str(int(trial.number)), exist_ok=True)
+    if gen_img:
+        # folder to save trial images
+        os.makedirs(save_loc+"/trial"+str(int(trial.number)), exist_ok=True)
     
     for epoch in list(range(epochs)):
         
