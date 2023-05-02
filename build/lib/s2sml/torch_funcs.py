@@ -721,7 +721,7 @@ def RMSELoss(pred, target):
 
 def corrcoef(pred, target):
     """
-    Torch implementation of pearson correlation coefficient.
+    Torch implementation of pearson correlation coefficient as a loss func.
     
     Args:
         pred (torch): torch model prediction
@@ -734,11 +734,28 @@ def corrcoef(pred, target):
     """
     pred_n = pred - pred.mean()
     target_n = target - target.mean()
-    pred_n = pred_n / pred_n.norm()
-    target_n = target_n / target_n.norm()
-    
-    return (pred_n * target_n).sum()
 
+    pred_norm = pred_n.norm() 
+
+    # if predictions are constant, norm would be zero, and correlation would be infinitely small, corrected by 0.0001
+    if pred_norm == 0: 
+        val_to_return = pred_norm.clone()
+        print('we have constant predictions!')
+        val_to_return[val_to_return==0] = 0.0001
+        return val_to_return
+
+    pred_n = pred_n / pred_norm  
+    target_n = target_n / target_n.norm()
+
+    val_to_return = (pred_n * target_n).sum() 
+
+    # don't want to minimize negative values!
+    if val_to_return < 0.0:
+        print('we have a negative!', val_to_return)
+        return (pred_n * target_n).sum() * (-0.0001)
+        
+    elif val_to_return >= 0.0:
+        return (pred_n * target_n).sum()
 
 def weighted_mse_loss(output, label, lat_weights, reduction='sum'):
     """

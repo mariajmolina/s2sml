@@ -1,0 +1,139 @@
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+we have a negative! tensor(-0.0722, device='cuda:0')
+32
+we have a negative! tensor(-0.0855, device='cuda:0')
+32
+we have a negative! tensor(-0.1087, device='cuda:0')
+8
+we have a negative! tensor(-0.0243, device='cuda:0')
+32
+we have a negative! tensor(-0.0579, device='cuda:0')
+32
+we have a negative! tensor(-0.0617, device='cuda:0')
+32
+we have a negative! tensor(-0.0910, device='cuda:0')
+32
+we have a negative! tensor(-0.0832, device='cuda:0')
+29
+we have a negative! tensor(-0.0695, device='cuda:0')
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
