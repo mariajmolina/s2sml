@@ -1,5 +1,9 @@
 seed: 1000
 save_loc: "/glade/work/schreck/repos/s2sml/results/echo_precip"
+img_gen: False
+# images generated every other img_iter (don't make zero! 'epoch divisible by')
+# e.g., make 1 if image wanted every epoch; 5 if every fifth epoch, etc.
+img_iter: 5
 data:
     homedir: '/glade/scratch/molina/'
     var: "prsfc" # 
@@ -10,22 +14,22 @@ data:
     norm: "minmax"
 
 # transforms:
-#     training:
-#         RandomVerticalFlip:
-#             rate: 0.5
-#         RandomHorizontalFlip: 
-#             rate: 0.5
-#         Normalize:
-#             mode: 'sym'
-#         ToTensor: True
-#     validation:
-#         Normalize:
-#             mode: 'sym'
-#         ToTensor: True
-#     inference:
-#         Normalize:
-#             mode: 'sym'
-                  
+# #     training:
+# #         RandomVerticalFlip:
+# #             rate: 0.5
+# #         RandomHorizontalFlip: 
+# #             rate: 0.5
+# #         Normalize:
+# #             mode: 'sym'
+# #         ToTensor: True
+# #     validation:
+# #         Normalize:
+# #             mode: 'sym'
+# #         ToTensor: True
+# #     inference:
+# #         Normalize:
+# #             mode: 'sym'
+#
 model:
     name: "unet"
     encoder_name: "resnet18"
