@@ -1,0 +1,156 @@
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/work/kdagon/s2sml/testGustInternet_results/
+INFO:root:	pbs.jobs: 2
+INFO:root:	pbs.bash: ['source ~/.bashrc; conda activate s2sml-env']
+INFO:root:	pbs.batch.N: s2sml-kdagon
+INFO:root:	pbs.batch.l: ['select=1:ncpus=4:ngpus=1:mem=32GB:host=gu0017', 'walltime=4:00:00', 'gpu_type=a100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.q: main
+INFO:root:	pbs.batch.o: /glade/work/kdagon/s2sml/testGustInternet_results/out
+INFO:root:	pbs.batch.e: /glade/work/kdagon/s2sml/testGustInternet_results/err
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/work/kdagon/s2sml/applications/train.py
+INFO:root:	optuna.direction: minimize
+INFO:root:	optuna.metric: valid_mae
+INFO:root:	optuna.n_trials: 10
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: TPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-05
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['minmax', 'zscore']
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 16
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 64
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet']
+INFO:root:	optuna.parameters.model:encoder_name.type: categorical
+INFO:root:	optuna.parameters.model:encoder_name.settings.name: encoder_name
+INFO:root:	optuna.parameters.model:encoder_name.settings.choices: ['resnet18', 'resnet152', 'densenet121', 'xception', 'efficientnet-b0', 'mobilenet_v2', 'dpn68', 'vgg11']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/work/kdagon/s2sml/testGustInternet_results/echo_opt
+INFO:root:	data.homedir: /glade/gust/scratch/molina/
+INFO:root:	data.var: tas2m
+INFO:root:	data.wks: 2
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 250.0
+INFO:root:	data.lat0: 30
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.encoder_name: resnet18
+INFO:root:	model.encoder_weights: imagenet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 2
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_mae
+INFO:root:Submitted pbs batch job 1/2 with id 18227.gusched01
+INFO:root:Submitted pbs batch job 2/2 with id 18228.gusched01
+INFO:root:Running on PBS/SLURM batch id: 18227.gusched01
+INFO:root:Importing custom objective from /glade/work/kdagon/s2sml/applications/train.py
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: minimize
+INFO:root:Using metric valid_mae
+INFO:root:Loaded study vanilla located at sqlite:////glade/work/kdagon/s2sml/testGustInternet_results/s2s.db
+INFO:echo.src.base_objective:Worker 18227.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric valid_mae
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/work/kdagon/s2sml/testGustInternet_results/trial_results/trial_results_18227.gusched01.csv
+INFO:root:Running optimization for 10 trials
+INFO:root:Running trials for a maximum PBS wall-time 4:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	model:encoder_name : vgg11
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.004805581693488654
+INFO:echo.src.base_objective:	trainer:train_batch_size : 50
+INFO:echo.src.base_objective:	trainer:training_loss : huber
+INFO:echo.src.base_objective:Beginning trial 0
+INFO:root:Loading model unet with settings {'encoder_name': 'vgg11', 'encoder_weights': 'imagenet', 'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 0 results to local file /glade/work/kdagon/s2sml/testGustInternet_results/trial_results/trial_results_18227.gusched01.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	model:encoder_name : dpn68
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.0004113468503683336
+INFO:echo.src.base_objective:	trainer:train_batch_size : 20
+INFO:echo.src.base_objective:	trainer:training_loss : smooth
+INFO:echo.src.base_objective:Beginning trial 1
+INFO:root:Loading model unet with settings {'encoder_name': 'dpn68', 'encoder_weights': 'imagenet', 'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+WARNING:root:Trial 1 failed due to error: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:997)>.
+WARNING:root:Died due to due to error <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:997)>
+INFO:root:Running on PBS/SLURM batch id: 18228.gusched01
+INFO:root:Importing custom objective from /glade/work/kdagon/s2sml/applications/train.py
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: minimize
+INFO:root:Using metric valid_mae
+INFO:root:Loaded study vanilla located at sqlite:////glade/work/kdagon/s2sml/testGustInternet_results/s2s.db
+INFO:echo.src.base_objective:Worker 18228.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric valid_mae
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/work/kdagon/s2sml/testGustInternet_results/trial_results/trial_results_18228.gusched01.csv
+INFO:root:Running optimization for 10 trials
+INFO:root:Running trials for a maximum PBS wall-time 4:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	model:encoder_name : mobilenet_v2
+INFO:echo.src.base_objective:	optimizer:learning_rate : 4.3622282935265105e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 28
+INFO:echo.src.base_objective:	trainer:training_loss : mae
+INFO:echo.src.base_objective:Beginning trial 2
+INFO:root:Loading model unet with settings {'encoder_name': 'mobilenet_v2', 'encoder_weights': 'imagenet', 'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 2 results to local file /glade/work/kdagon/s2sml/testGustInternet_results/trial_results/trial_results_18228.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/testGustInternet_results/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	model:encoder_name : resnet18
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.001033692438687187
+INFO:echo.src.base_objective:	trainer:train_batch_size : 25
+INFO:echo.src.base_objective:	trainer:training_loss : smooth
+INFO:echo.src.base_objective:Beginning trial 3
+INFO:root:Loading model unet with settings {'encoder_name': 'resnet18', 'encoder_weights': 'imagenet', 'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 3 results to local file /glade/work/kdagon/s2sml/testGustInternet_results/trial_results/trial_results_18228.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/testGustInternet_results/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	model:encoder_name : densenet121
+INFO:echo.src.base_objective:	optimizer:learning_rate : 2.544182333268286e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 62
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 4
+INFO:root:Loading model unet with settings {'encoder_name': 'densenet121', 'encoder_weights': 'imagenet', 'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+WARNING:root:Trial 4 failed due to error: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:997)>.
+WARNING:root:Died due to due to error <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:997)>
