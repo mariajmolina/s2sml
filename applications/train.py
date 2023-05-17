@@ -133,7 +133,8 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
 
 @torch.no_grad()
 def validate(model, dataloader, criterion, metrics, second_metrics, 
-             nc, epoch, trial_num, gen_img, img_iters, save_loc, data_split="valid"):
+             nc, epoch, trial_num, gen_img, gen_scatter,
+             img_iters, save_loc, data_split="valid"):
     """
     Validation function.
 
@@ -225,6 +226,43 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         # evaluate correlation coefficient of cesm vs labels
         tloss = torch_funcs.corrcoef(img_noisy[:, nc - 1 : nc, :, :], img_label)
 
+        # if images are to be saved, do this
+        if gen_scatter:
+            
+            # only if frequency criteria is met, based on epoch
+            if int(epoch) % img_iters == 0:
+
+                # save figs for later reference
+                # input data
+                a_inp = img_noisy.cpu().detach().numpy()[:,nc-1,:,:].ravel()
+                # output data
+                b_out = outputs.cpu().detach().numpy()[:,0,:,:].ravel()
+                # label
+                c_lbl = img_label.cpu().detach().numpy()[:,0,:,:].ravel()
+
+                # change plt logging level otherwise get a lot of debug output
+                plt.set_loglevel(level='warning')
+
+                # cesm vs. era5
+                im = plt.scatter(a_inp,c_lbl,s=5,color='k')
+                plt.ylabel('ERA5')
+                plt.xlabel('CESM')
+
+                plt.savefig(
+                    f"{save_loc}/trial{str(trial_num)}/scatter_{data_split}_inp_{str(epoch)}_{str(trial_num)}.png", 
+                    bbox_inches='tight')
+                plt.close()
+
+                # cesm vs. era5
+                im = plt.scatter(b_out,c_lbl,s=5,color='k')
+                plt.ylabel('ERA5')
+                plt.xlabel('CNN')
+
+                plt.savefig(
+                    f"{save_loc}/trial{str(trial_num)}/scatter_{data_split}_out_{str(epoch)}_{str(trial_num)}.png", 
+                    bbox_inches='tight')
+                plt.close()
+
         # ml model output eval
         for k, v in metrics.items():
             try:
@@ -288,6 +326,7 @@ def trainer(conf, trial=False, verbose=True):
     
     # whether to generate image output and frequency
     gen_img = conf["img_gen"]
+    gen_scatter = conf["scatter_gen"]
     if gen_img:
         img_iters = conf["img_iter"]
     if not gen_img:
@@ -434,11 +473,11 @@ def trainer(conf, trial=False, verbose=True):
         )
         v_loss, v_corr, v_true, metrics, cesm_metrics = validate(
             model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, int(trial.number), gen_img, img_iters, save_loc, data_split="valid"
+            nc, epoch, int(trial.number), gen_img, gen_scatter, img_iters, save_loc, data_split="valid"
         )
         e_loss, e_corr, e_true, emetrics, cesm_emetrics = validate(
             model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, int(trial.number), gen_img, img_iters, save_loc, data_split="eval"
+            nc, epoch, int(trial.number), gen_img, gen_scatter, img_iters, save_loc, data_split="eval"
         )
 
         assert np.isfinite(v_loss), "Something is wrong, the validation loss is NaN"
