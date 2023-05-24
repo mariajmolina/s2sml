@@ -1,0 +1,2118 @@
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00013: reducing learning rate of group 0 to 6.8159e-05.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0188, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00021: reducing learning rate of group 0 to 2.1842e-05.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.2236, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0863, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0579, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0185, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0037, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00008: reducing learning rate of group 0 to 1.5645e-06.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00015: reducing learning rate of group 0 to 1.5645e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.2310, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00036: reducing learning rate of group 0 to 4.8045e-06.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.2233, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00010: reducing learning rate of group 0 to 1.7594e-04.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00017: reducing learning rate of group 0 to 1.7594e-05.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00023: reducing learning rate of group 0 to 1.7594e-06.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+we have a negative! tensor(-0.0326, device='cuda:0')
+32
+we have a negative! tensor(-0.0367, device='cuda:0')
+32
+we have a negative! tensor(-0.0316, device='cuda:0')
+8
+we have a negative! tensor(-0.0457, device='cuda:0')
+32
+we have a negative! tensor(-0.0349, device='cuda:0')
+32
+we have a negative! tensor(-0.0438, device='cuda:0')
+32
+we have a negative! tensor(-0.0362, device='cuda:0')
+32
+we have a negative! tensor(-0.0489, device='cuda:0')
+29
+we have a negative! tensor(-0.0481, device='cuda:0')
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00025: reducing learning rate of group 0 to 4.1690e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0004, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00059: reducing learning rate of group 0 to 1.8639e-06.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0011, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0825, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0274, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0034, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.1035, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0058, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0143, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0254, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0436, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0173, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0205, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0573, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0031, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0288, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0256, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00034: reducing learning rate of group 0 to 1.1801e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00010: reducing learning rate of group 0 to 9.7718e-04.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00016: reducing learning rate of group 0 to 9.7718e-05.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0907, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00018: reducing learning rate of group 0 to 5.4766e-06.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00028: reducing learning rate of group 0 to 5.4766e-07.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0525, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+we have a negative! tensor(-0.0008, device='cuda:0')
+32
+32
+32
+8
+we have a negative! tensor(-0.0536, device='cuda:0')
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00031: reducing learning rate of group 0 to 7.5013e-04.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00040: reducing learning rate of group 0 to 7.5013e-05.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00046: reducing learning rate of group 0 to 7.5013e-06.
+Epoch 00050: reducing learning rate of group 0 to 7.5013e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00054: reducing learning rate of group 0 to 7.5013e-08.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00034: reducing learning rate of group 0 to 1.5122e-06.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00039: reducing learning rate of group 0 to 1.5122e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0084, device='cuda:0', grad_fn=<SumBackward0>)
+32
+we have a negative! tensor(-0.0961, device='cuda:0')
+32
+we have a negative! tensor(-0.0385, device='cuda:0')
+32
+8
+32
+we have a negative! tensor(-0.0041, device='cuda:0')
+32
+32
+32
+we have a negative! tensor(-0.0254, device='cuda:0')
+29
+we have a negative! tensor(-0.0038, device='cuda:0')
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00020: reducing learning rate of group 0 to 7.8669e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00025: reducing learning rate of group 0 to 7.8669e-08.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00031: reducing learning rate of group 0 to 7.8669e-09.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00041: reducing learning rate of group 0 to 1.3010e-05.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+we have a negative! tensor(-0.0890, device='cuda:0')
+32
+we have a negative! tensor(-0.0898, device='cuda:0')
+8
+we have a negative! tensor(-0.0193, device='cuda:0')
+32
+32
+32
+we have a negative! tensor(-0.0165, device='cuda:0')
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0027, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+we have a negative! tensor(-0.0084, device='cuda:0')
+8
+32
+32
+32
+we have a negative! tensor(-0.0109, device='cuda:0')
+32
+we have a negative! tensor(-0.0176, device='cuda:0')
+29
+we have a negative! tensor(-0.0026, device='cuda:0')
+we have a negative! tensor(-0.0120, device='cuda:0')
+we have a negative! tensor(-0.0107, device='cuda:0')
+we have a negative! tensor(-0.0049, device='cuda:0')
+we have a negative! tensor(-0.0101, device='cuda:0')
+we have a negative! tensor(-0.0041, device='cuda:0')
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00022: reducing learning rate of group 0 to 1.3057e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00029: reducing learning rate of group 0 to 1.3057e-08.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00004: reducing learning rate of group 0 to 1.3936e-04.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00024: reducing learning rate of group 0 to 1.2674e-05.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00031: reducing learning rate of group 0 to 1.2674e-06.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00004: reducing learning rate of group 0 to 3.1838e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0275, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00026: reducing learning rate of group 0 to 1.4636e-06.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00033: reducing learning rate of group 0 to 1.4636e-07.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0782, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.1020, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0546, device='cuda:0', grad_fn=<SumBackward0>)
+32
+we have a negative! tensor(-0.0638, device='cuda:0')
+32
+we have a negative! tensor(-0.1479, device='cuda:0')
+32
+we have a negative! tensor(-0.0192, device='cuda:0')
+8
+we have a negative! tensor(-0.2344, device='cuda:0')
+32
+32
+we have a negative! tensor(-0.1290, device='cuda:0')
+32
+we have a negative! tensor(-0.0401, device='cuda:0')
+32
+we have a negative! tensor(-0.0990, device='cuda:0')
+29
+we have a negative! tensor(-0.1171, device='cuda:0')
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00006: reducing learning rate of group 0 to 7.5676e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00014: reducing learning rate of group 0 to 7.5676e-08.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0409, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0004, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0892, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0152, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0190, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0096, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+we have a negative! tensor(-0.1031, device='cuda:0')
+32
+we have a negative! tensor(-0.0470, device='cuda:0')
+8
+we have a negative! tensor(-0.2302, device='cuda:0')
+32
+we have a negative! tensor(-0.0097, device='cuda:0')
+32
+we have a negative! tensor(-0.1268, device='cuda:0')
+32
+we have a negative! tensor(-0.0099, device='cuda:0')
+32
+we have a negative! tensor(-0.1300, device='cuda:0')
+29
+we have a negative! tensor(-0.0143, device='cuda:0')
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00014: reducing learning rate of group 0 to 2.4833e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00025: reducing learning rate of group 0 to 2.4833e-08.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00019: reducing learning rate of group 0 to 1.0493e-05.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00023: reducing learning rate of group 0 to 1.0493e-06.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00018: reducing learning rate of group 0 to 7.9462e-05.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00027: reducing learning rate of group 0 to 7.9462e-06.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00033: reducing learning rate of group 0 to 7.9462e-07.
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.0498, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0574, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0194, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0112, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0190, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0030, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0347, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0019, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0018, device='cuda:0', grad_fn=<SumBackward0>)
+32
+we have a negative! tensor(-0.0688, device='cuda:0')
+32
+we have a negative! tensor(-0.0194, device='cuda:0')
+32
+we have a negative! tensor(-0.1172, device='cuda:0')
+8
+32
+32
+32
+we have a negative! tensor(-0.0053, device='cuda:0')
+32
+we have a negative! tensor(-0.0262, device='cuda:0')
+29
+we have a negative! tensor(-0.0322, device='cuda:0')
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00059: reducing learning rate of group 0 to 1.1568e-07.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00063: reducing learning rate of group 0 to 1.1568e-08.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00067: reducing learning rate of group 0 to 1.1568e-09.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00023: reducing learning rate of group 0 to 4.1794e-04.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00039: reducing learning rate of group 0 to 4.1794e-05.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
+Loading model from: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/lpips/weights/v0.1/alex.pth
+we have a negative! tensor(-0.1152, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.2792, device='cuda:0', grad_fn=<SumBackward0>)
+we have a negative! tensor(-0.0249, device='cuda:0', grad_fn=<SumBackward0>)
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00009: reducing learning rate of group 0 to 4.5440e-04.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00017: reducing learning rate of group 0 to 4.5440e-05.
+32
+32
+32
+8
+32
+32
+32
+32
+29
+Epoch 00024: reducing learning rate of group 0 to 4.5440e-06.
+32
+32
+32
+8
+32
+32
+32
+32
+29

@@ -1,0 +1,538 @@
+INFO:root:Current hyperparameter configuration settings:
+INFO:root:	log: True
+INFO:root:	save_path: /glade/work/kdagon/s2sml/results_week3_SH_509/
+INFO:root:	pbs.jobs: 5
+INFO:root:	pbs.bash: ['source ~/.bashrc; conda activate s2sml-env']
+INFO:root:	pbs.batch.N: s2smlwk3SH
+INFO:root:	pbs.batch.l: ['select=1:ncpus=4:ngpus=1:mem=64GB:host=gu0017', 'walltime=2:00:00', 'gpu_type=a100']
+INFO:root:	pbs.batch.A: ACGD0007
+INFO:root:	pbs.batch.q: main
+INFO:root:	pbs.batch.o: /glade/work/kdagon/s2sml/results_week3_SH_509/out
+INFO:root:	pbs.batch.e: /glade/work/kdagon/s2sml/results_week3_SH_509/err
+INFO:root:	optuna.storage: s2s.db
+INFO:root:	optuna.study_name: vanilla
+INFO:root:	optuna.storage_type: sqlite
+INFO:root:	optuna.objective: /glade/work/kdagon/s2sml/applications/train.py
+INFO:root:	optuna.direction: ['maximize', 'maximize']
+INFO:root:	optuna.metric: ['valid_custom_second', 'valid_custom_third']
+INFO:root:	optuna.n_trials: 1000
+INFO:root:	optuna.gpu: True
+INFO:root:	optuna.sampler.type: MOTPESampler
+INFO:root:	optuna.sampler.n_startup_trials: 100
+INFO:root:	optuna.pruner.type: MedianPruner
+INFO:root:	optuna.pruner.n_startup_trials: 50
+INFO:root:	optuna.parameters.optimizer:learning_rate.type: loguniform
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.name: learning_rate
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.low: 1e-06
+INFO:root:	optuna.parameters.optimizer:learning_rate.settings.high: 0.01
+INFO:root:	optuna.parameters.data:norm.type: categorical
+INFO:root:	optuna.parameters.data:norm.settings.name: norm
+INFO:root:	optuna.parameters.data:norm.settings.choices: ['minmax', 'negone', 'zscore']
+INFO:root:	optuna.parameters.trainer:weight_decay.type: loguniform
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.name: weight_decay
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.low: 1e-12
+INFO:root:	optuna.parameters.trainer:weight_decay.settings.high: 0.001
+INFO:root:	optuna.parameters.trainer:train_batch_size.type: int
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.name: train_batch_size
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.low: 4
+INFO:root:	optuna.parameters.trainer:train_batch_size.settings.high: 128
+INFO:root:	optuna.parameters.trainer:training_loss.type: categorical
+INFO:root:	optuna.parameters.trainer:training_loss.settings.name: training_loss
+INFO:root:	optuna.parameters.trainer:training_loss.settings.choices: ['mae', 'mse', 'smooth', 'logcosh', 'xtanh', 'xsigmoid', 'huber']
+INFO:root:	optuna.parameters.model:name.type: categorical
+INFO:root:	optuna.parameters.model:name.settings.name: model_name
+INFO:root:	optuna.parameters.model:name.settings.choices: ['unet', 'unet++', 'manet', 'linknet', 'fpn', 'pspnet', 'deeplabv3', 'deeplabv3+']
+INFO:root:Current model configuration settings:
+INFO:root:	seed: 1000
+INFO:root:	save_loc: /glade/work/kdagon/s2sml/results_week3_SH_509/echo_opt
+INFO:root:	img_gen: True
+INFO:root:	img_iter: 5
+INFO:root:	data.homedir: /glade/gust/scratch/molina/
+INFO:root:	data.var: tas2m
+INFO:root:	data.wks: 3
+INFO:root:	data.dxdy: 31
+INFO:root:	data.lon0: 280.0
+INFO:root:	data.lat0: -55
+INFO:root:	data.norm: minmax
+INFO:root:	model.name: unet
+INFO:root:	model.in_channels: 4
+INFO:root:	model.classes: 1
+INFO:root:	model.activation: sigmoid
+INFO:root:	optimizer.learning_rate: 0.001
+INFO:root:	optimizer.weight_decay: 0.0
+INFO:root:	trainer.epochs: 75
+INFO:root:	trainer.train_batch_size: 32
+INFO:root:	trainer.valid_batch_size: 32
+INFO:root:	trainer.batches_per_epoch: 100
+INFO:root:	trainer.lr_patience: 2
+INFO:root:	trainer.stopping_patience: 5
+INFO:root:	trainer.loss: smooth
+INFO:root:	trainer.metric: valid_custom_second
+INFO:root:	trainer.direction: maximize
+INFO:root:Submitted pbs batch job 1/5 with id 29161.gusched01
+INFO:root:Submitted pbs batch job 2/5 with id 29162.gusched01
+INFO:root:Submitted pbs batch job 3/5 with id 29163.gusched01
+INFO:root:Submitted pbs batch job 4/5 with id 29164.gusched01
+INFO:root:Submitted pbs batch job 5/5 with id 29165.gusched01
+INFO:root:Running on PBS/SLURM batch id: 29161.gusched01
+INFO:root:Importing custom objective from /glade/work/kdagon/s2sml/applications/train.py
+DEBUG:matplotlib:matplotlib data path: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/matplotlib/mpl-data
+DEBUG:matplotlib:CONFIGDIR=/glade/u/home/kdagon/.config/matplotlib
+DEBUG:matplotlib:interactive is False
+DEBUG:matplotlib:platform is linux
+DEBUG:matplotlib:CACHEDIR=/glade/u/home/kdagon/.cache/matplotlib
+DEBUG:matplotlib.font_manager:Using fontManager instance from /glade/u/home/kdagon/.cache/matplotlib/fontlist-v330.json
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: ['maximize', 'maximize']
+INFO:root:Using metric ['valid_custom_second', 'valid_custom_third']
+INFO:root:Loaded study vanilla located at sqlite:////glade/work/kdagon/s2sml/results_week3_SH_509/s2s.db
+INFO:echo.src.base_objective:Worker 29161.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric ['valid_custom_second', 'valid_custom_third']
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29161.gusched01.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 2:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : linknet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.000681591636215905
+INFO:echo.src.base_objective:	trainer:train_batch_size : 24
+INFO:echo.src.base_objective:	trainer:weight_decay : 9.064403529056413e-12
+INFO:echo.src.base_objective:	trainer:training_loss : smooth
+INFO:echo.src.base_objective:Beginning trial 0
+INFO:root:Loading model linknet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 0 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29161.gusched01.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : deeplabv3+
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.00021841618166149
+INFO:echo.src.base_objective:	trainer:train_batch_size : 68
+INFO:echo.src.base_objective:	trainer:weight_decay : 6.808851294729696e-06
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 1
+INFO:root:Loading model deeplabv3+ with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 1 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29161.gusched01.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : fpn
+INFO:echo.src.base_objective:	optimizer:learning_rate : 1.564512735068924e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 4
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.9162958391578588e-09
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 2
+INFO:root:Loading model fpn with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 2 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29161.gusched01.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : pspnet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 4.8044584880007385e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 93
+INFO:echo.src.base_objective:	trainer:weight_decay : 6.872436643850065e-12
+INFO:echo.src.base_objective:	trainer:training_loss : mse
+INFO:echo.src.base_objective:Beginning trial 3
+INFO:root:Loading model pspnet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 3 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29161.gusched01.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : pspnet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.001759364461027559
+INFO:echo.src.base_objective:	trainer:train_batch_size : 99
+INFO:echo.src.base_objective:	trainer:weight_decay : 0.0006246573435914948
+INFO:echo.src.base_objective:	trainer:training_loss : mse
+INFO:echo.src.base_objective:Beginning trial 4
+INFO:root:Loading model pspnet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 4 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29161.gusched01.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : linknet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 4.1690124557957165e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 21
+INFO:echo.src.base_objective:	trainer:weight_decay : 0.0006820167396137273
+INFO:echo.src.base_objective:	trainer:training_loss : smooth
+INFO:echo.src.base_objective:Beginning trial 5
+INFO:root:Loading model linknet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 5 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29161.gusched01.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : manet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 1.8639251584498313e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 54
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.8680867568108324e-09
+INFO:echo.src.base_objective:	trainer:training_loss : xsigmoid
+INFO:echo.src.base_objective:Beginning trial 6
+INFO:root:Loading model manet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 6 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29161.gusched01.csv
+WARNING:root:Stopping early since the longest observed run-time in the study exceeds the time remaining on this node.
+INFO:root:Running on PBS/SLURM batch id: 29162.gusched01
+INFO:root:Importing custom objective from /glade/work/kdagon/s2sml/applications/train.py
+DEBUG:matplotlib:matplotlib data path: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/matplotlib/mpl-data
+DEBUG:matplotlib:CONFIGDIR=/glade/u/home/kdagon/.config/matplotlib
+DEBUG:matplotlib:interactive is False
+DEBUG:matplotlib:platform is linux
+DEBUG:matplotlib:CACHEDIR=/glade/u/home/kdagon/.cache/matplotlib
+DEBUG:matplotlib.font_manager:Using fontManager instance from /glade/u/home/kdagon/.cache/matplotlib/fontlist-v330.json
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: ['maximize', 'maximize']
+INFO:root:Using metric ['valid_custom_second', 'valid_custom_third']
+INFO:root:Loaded study vanilla located at sqlite:////glade/work/kdagon/s2sml/results_week3_SH_509/s2s.db
+INFO:echo.src.base_objective:Worker 29162.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric ['valid_custom_second', 'valid_custom_third']
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29162.gusched01.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 2:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 1.1800902996579928e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 7
+INFO:echo.src.base_objective:	trainer:weight_decay : 6.049301659407806e-05
+INFO:echo.src.base_objective:	trainer:training_loss : huber
+INFO:echo.src.base_objective:Beginning trial 7
+INFO:root:Loading model unet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 7 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29162.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : deeplabv3+
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.009771779157016975
+INFO:echo.src.base_objective:	trainer:train_batch_size : 4
+INFO:echo.src.base_objective:	trainer:weight_decay : 0.00034060883814005454
+INFO:echo.src.base_objective:	trainer:training_loss : huber
+INFO:echo.src.base_objective:Beginning trial 8
+INFO:root:Loading model deeplabv3+ with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 8 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29162.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : pspnet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 5.4766336709247395e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 114
+INFO:echo.src.base_objective:	trainer:weight_decay : 5.2574915580116704e-11
+INFO:echo.src.base_objective:	trainer:training_loss : smooth
+INFO:echo.src.base_objective:Beginning trial 9
+INFO:root:Loading model pspnet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 9 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29162.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.007501259681860686
+INFO:echo.src.base_objective:	trainer:train_batch_size : 106
+INFO:echo.src.base_objective:	trainer:weight_decay : 2.2024954963034634e-08
+INFO:echo.src.base_objective:	trainer:training_loss : xsigmoid
+INFO:echo.src.base_objective:Beginning trial 10
+INFO:root:Loading model unet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 10 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29162.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : unet++
+INFO:echo.src.base_objective:	optimizer:learning_rate : 1.5122206379660281e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 23
+INFO:echo.src.base_objective:	trainer:weight_decay : 2.5450940450560455e-06
+INFO:echo.src.base_objective:	trainer:training_loss : xsigmoid
+INFO:echo.src.base_objective:Beginning trial 11
+INFO:root:Loading model unet++ with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 11 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29162.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : deeplabv3+
+INFO:echo.src.base_objective:	optimizer:learning_rate : 7.866854697098944e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 60
+INFO:echo.src.base_objective:	trainer:weight_decay : 4.6133440352820493e-07
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 12
+INFO:root:Loading model deeplabv3+ with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 12 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29162.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+WARNING:root:Stopping early since the longest observed run-time in the study exceeds the time remaining on this node.
+INFO:root:Running on PBS/SLURM batch id: 29163.gusched01
+INFO:root:Importing custom objective from /glade/work/kdagon/s2sml/applications/train.py
+DEBUG:matplotlib:matplotlib data path: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/matplotlib/mpl-data
+DEBUG:matplotlib:CONFIGDIR=/glade/u/home/kdagon/.config/matplotlib
+DEBUG:matplotlib:interactive is False
+DEBUG:matplotlib:platform is linux
+DEBUG:matplotlib:CACHEDIR=/glade/u/home/kdagon/.cache/matplotlib
+DEBUG:matplotlib.font_manager:Using fontManager instance from /glade/u/home/kdagon/.cache/matplotlib/fontlist-v330.json
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: ['maximize', 'maximize']
+INFO:root:Using metric ['valid_custom_second', 'valid_custom_third']
+INFO:root:Loaded study vanilla located at sqlite:////glade/work/kdagon/s2sml/results_week3_SH_509/s2s.db
+INFO:echo.src.base_objective:Worker 29163.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric ['valid_custom_second', 'valid_custom_third']
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29163.gusched01.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 2:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : linknet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.00013010438330093263
+INFO:echo.src.base_objective:	trainer:train_batch_size : 108
+INFO:echo.src.base_objective:	trainer:weight_decay : 0.0002735885609062792
+INFO:echo.src.base_objective:	trainer:training_loss : huber
+INFO:echo.src.base_objective:Beginning trial 13
+INFO:root:Loading model linknet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 13 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29163.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : deeplabv3+
+INFO:echo.src.base_objective:	optimizer:learning_rate : 7.555770440130107e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 74
+INFO:echo.src.base_objective:	trainer:weight_decay : 3.549170841472894e-06
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 14
+INFO:root:Loading model deeplabv3+ with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 14 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29163.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : linknet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 1.305674882236485e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 9
+INFO:echo.src.base_objective:	trainer:weight_decay : 3.381440027354686e-05
+INFO:echo.src.base_objective:	trainer:training_loss : mse
+INFO:echo.src.base_objective:Beginning trial 15
+INFO:root:Loading model linknet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 15 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29163.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : fpn
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.001393634059789585
+INFO:echo.src.base_objective:	trainer:train_batch_size : 52
+INFO:echo.src.base_objective:	trainer:weight_decay : 5.93709966412361e-11
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 16
+INFO:root:Loading model fpn with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 16 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29163.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : linknet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.00012674431398915247
+INFO:echo.src.base_objective:	trainer:train_batch_size : 41
+INFO:echo.src.base_objective:	trainer:weight_decay : 3.044135118932579e-12
+INFO:echo.src.base_objective:	trainer:training_loss : mae
+INFO:echo.src.base_objective:Beginning trial 17
+INFO:root:Loading model linknet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 17 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29163.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+WARNING:root:Stopping early since the longest observed run-time in the study exceeds the time remaining on this node.
+INFO:root:Running on PBS/SLURM batch id: 29164.gusched01
+INFO:root:Importing custom objective from /glade/work/kdagon/s2sml/applications/train.py
+DEBUG:matplotlib:matplotlib data path: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/matplotlib/mpl-data
+DEBUG:matplotlib:CONFIGDIR=/glade/u/home/kdagon/.config/matplotlib
+DEBUG:matplotlib:interactive is False
+DEBUG:matplotlib:platform is linux
+DEBUG:matplotlib:CACHEDIR=/glade/u/home/kdagon/.cache/matplotlib
+DEBUG:matplotlib.font_manager:Using fontManager instance from /glade/u/home/kdagon/.cache/matplotlib/fontlist-v330.json
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: ['maximize', 'maximize']
+INFO:root:Using metric ['valid_custom_second', 'valid_custom_third']
+INFO:root:Loaded study vanilla located at sqlite:////glade/work/kdagon/s2sml/results_week3_SH_509/s2s.db
+INFO:echo.src.base_objective:Worker 29164.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric ['valid_custom_second', 'valid_custom_third']
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29164.gusched01.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 2:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : linknet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 3.183839624402761e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 24
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.8901762766488768e-11
+INFO:echo.src.base_objective:	trainer:training_loss : mse
+INFO:echo.src.base_objective:Beginning trial 18
+INFO:root:Loading model linknet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 18 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29164.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : deeplabv3+
+INFO:echo.src.base_objective:	optimizer:learning_rate : 1.463565227815366e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 23
+INFO:echo.src.base_objective:	trainer:weight_decay : 3.868675833467921e-08
+INFO:echo.src.base_objective:	trainer:training_loss : mae
+INFO:echo.src.base_objective:Beginning trial 19
+INFO:root:Loading model deeplabv3+ with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 19 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29164.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : pspnet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 7.567552604674541e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 99
+INFO:echo.src.base_objective:	trainer:weight_decay : 2.268581529851149e-09
+INFO:echo.src.base_objective:	trainer:training_loss : mse
+INFO:echo.src.base_objective:Beginning trial 20
+INFO:root:Loading model pspnet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 20 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29164.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 7.814082051431487e-05
+INFO:echo.src.base_objective:	trainer:train_batch_size : 119
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.2821714497840327e-10
+INFO:echo.src.base_objective:	trainer:training_loss : mae
+INFO:echo.src.base_objective:Beginning trial 21
+INFO:root:Loading model unet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 21 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29164.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : fpn
+INFO:echo.src.base_objective:	optimizer:learning_rate : 2.483342076045291e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 42
+INFO:echo.src.base_objective:	trainer:weight_decay : 0.000615133697099288
+INFO:echo.src.base_objective:	trainer:training_loss : mae
+INFO:echo.src.base_objective:Beginning trial 22
+INFO:root:Loading model fpn with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 22 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29164.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : fpn
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.00010492636551528605
+INFO:echo.src.base_objective:	trainer:train_batch_size : 72
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.4965539524889573e-05
+INFO:echo.src.base_objective:	trainer:training_loss : mae
+INFO:echo.src.base_objective:Beginning trial 23
+INFO:root:Loading model fpn with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 23 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29164.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+WARNING:root:Stopping early since the longest observed run-time in the study exceeds the time remaining on this node.
+INFO:root:Running on PBS/SLURM batch id: 29165.gusched01
+INFO:root:Importing custom objective from /glade/work/kdagon/s2sml/applications/train.py
+DEBUG:matplotlib:matplotlib data path: /glade/work/kdagon/conda-envs/s2sml-env/lib/python3.10/site-packages/matplotlib/mpl-data
+DEBUG:matplotlib:CONFIGDIR=/glade/u/home/kdagon/.config/matplotlib
+DEBUG:matplotlib:interactive is False
+DEBUG:matplotlib:platform is linux
+DEBUG:matplotlib:CACHEDIR=/glade/u/home/kdagon/.cache/matplotlib
+DEBUG:matplotlib.font_manager:Using fontManager instance from /glade/u/home/kdagon/.cache/matplotlib/fontlist-v330.json
+INFO:echo.src.reporting:Using device 0
+INFO:root:Direction of optimization: ['maximize', 'maximize']
+INFO:root:Using metric ['valid_custom_second', 'valid_custom_third']
+INFO:root:Loaded study vanilla located at sqlite:////glade/work/kdagon/s2sml/results_week3_SH_509/s2s.db
+INFO:echo.src.base_objective:Worker 29165.gusched01 is summoned.
+INFO:echo.src.base_objective:	initializing an objective to be optimized with metric ['valid_custom_second', 'valid_custom_third']
+INFO:echo.src.base_objective:	using device(s) cuda:0
+INFO:echo.src.base_objective:	saving study/trial results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29165.gusched01.csv
+INFO:root:Running optimization for 1000 trials
+INFO:root:Running trials for a maximum PBS wall-time 2:00:00
+WARNING:root:Attempting to run trials and stop before hitting the wall-time
+WARNING:root:Some trials may not complete if the wall-time is reached. Optuna will start over.
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : unet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.0007946241546742142
+INFO:echo.src.base_objective:	trainer:train_batch_size : 75
+INFO:echo.src.base_objective:	trainer:weight_decay : 1.8760637189003604e-09
+INFO:echo.src.base_objective:	trainer:training_loss : xtanh
+INFO:echo.src.base_objective:Beginning trial 24
+INFO:root:Loading model unet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 24 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29165.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : zscore
+INFO:echo.src.base_objective:	model:name : deeplabv3
+INFO:echo.src.base_objective:	optimizer:learning_rate : 1.156829823620151e-06
+INFO:echo.src.base_objective:	trainer:train_batch_size : 45
+INFO:echo.src.base_objective:	trainer:weight_decay : 5.987435889949007e-12
+INFO:echo.src.base_objective:	trainer:training_loss : logcosh
+INFO:echo.src.base_objective:Beginning trial 25
+INFO:root:Loading model deeplabv3 with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 25 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29165.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : negone
+INFO:echo.src.base_objective:	model:name : linknet
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.004179428619525876
+INFO:echo.src.base_objective:	trainer:train_batch_size : 46
+INFO:echo.src.base_objective:	trainer:weight_decay : 3.5101203873692835e-07
+INFO:echo.src.base_objective:	trainer:training_loss : xsigmoid
+INFO:echo.src.base_objective:Beginning trial 26
+INFO:root:Loading model linknet with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 26 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29165.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+INFO:echo.src.base_objective:Attempting to automatically update the model configuration using optuna's suggested parameters
+INFO:echo.src.base_objective:	data:norm : minmax
+INFO:echo.src.base_objective:	model:name : deeplabv3
+INFO:echo.src.base_objective:	optimizer:learning_rate : 0.004543952662324878
+INFO:echo.src.base_objective:	trainer:train_batch_size : 57
+INFO:echo.src.base_objective:	trainer:weight_decay : 0.00015608919032214066
+INFO:echo.src.base_objective:	trainer:training_loss : huber
+INFO:echo.src.base_objective:Beginning trial 27
+INFO:root:Loading model deeplabv3 with settings {'in_channels': 4, 'classes': 1, 'activation': 'sigmoid'}
+INFO:root:Loading loss smooth
+INFO:root:Loading loss smooth
+INFO:echo.src.base_objective:Saving trial 27 results to local file /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results/trial_results_29165.gusched01.csv
+INFO:echo.src.base_objective:Merging trial results and saving to /glade/work/kdagon/s2sml/results_week3_SH_509/trial_results.csv
+WARNING:root:Stopping early since the longest observed run-time in the study exceeds the time remaining on this node.

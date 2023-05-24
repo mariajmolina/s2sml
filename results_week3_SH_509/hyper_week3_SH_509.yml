@@ -1,0 +1,69 @@
+log: True
+save_path: "/glade/work/kdagon/s2sml/results_week3_SH_509/" # changed path
+
+pbs:
+  jobs: 5 # changed jobs
+  #kernel: "ncar_pylib /glade/work/$USER/py37" # KD: commented out this line
+  bash: ["source ~/.bashrc; conda activate s2sml-env"] # KD: modified to source bashrc (which loads conda) and conda activate $ENV
+  batch:
+    N: "s2smlwk3SH" # changed name
+    l: ["select=1:ncpus=4:ngpus=1:mem=64GB:host=gu0017", "walltime=2:00:00", "gpu_type=a100"] # changed resource request
+    A: "ACGD0007" # changed account number
+    q: "main" # changed queue for gust
+    o: "/glade/work/kdagon/s2sml/results_week3_SH_509/out" # changed path
+    e: "/glade/work/kdagon/s2sml/results_week3_SH_509/err" # changed path
+    
+optuna:
+  storage: "s2s.db"
+  study_name: "vanilla"
+  storage_type: "sqlite"
+  objective: "/glade/work/kdagon/s2sml/applications/train.py" # changed path
+  direction: ["maximize", "maximize"] # added metrics
+  metric: ["valid_custom_second", "valid_custom_third"] # added custom metrics
+  n_trials: 1000 # changed number of trials
+  gpu: True
+  sampler:
+    type: "MOTPESampler" # changed sampler
+    n_startup_trials: 100
+  pruner:
+    type: "MedianPruner"
+    n_startup_trials: 50
+  parameters:
+    optimizer:learning_rate:
+      type: "loguniform"
+      settings:
+        name: "learning_rate"
+        low: 1.0e-06
+        high: 1.0e-02
+    data:norm:
+      type: "categorical"
+      settings:
+        name: "norm"
+        choices: ["minmax", "negone", "zscore"] # changed options
+    trainer:weight_decay:
+      type: "loguniform"
+      settings:
+        name: "weight_decay"
+        low: 1.0e-12
+        high: 1.0e-03
+    trainer:train_batch_size:
+      type: "int"
+      settings:
+        name: "train_batch_size"
+        low: 4
+        high: 128 # changed high batch size
+    trainer:training_loss:
+      type: "categorical"
+      settings:
+        name: "training_loss"
+        choices: ["mae", "mse", "smooth", "logcosh", "xtanh", "xsigmoid", "huber"]
+    model:name:
+      type: "categorical"
+      settings:
+        name: "model_name"
+        choices: ["unet", "unet++", "manet", "linknet", "fpn", "pspnet", "deeplabv3", "deeplabv3+"]
+    #model:encoder_name: # commented out 
+    #  type: "categorical"
+    #  settings:
+    #    name: "encoder_name"
+    #    choices: ["resnet18", "resnet152", "densenet121", "xception", "efficientnet-b0", "mobilenet_v2", "dpn68", "vgg11"]
