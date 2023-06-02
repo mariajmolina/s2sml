@@ -1,0 +1,9 @@
+.ipynb_checkpoints/
+applications/__pycache__/
+applications/.ipynb_checkpoints/
+s2sml.egg-info/
+s2sml/.ipynb_checkpoints/
+results/err
+resultsbaby/err
+results_test/err
+results_test/best.pt
