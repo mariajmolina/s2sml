@@ -1,8 +1,7 @@
 applications/__pycache__/
 s2sml.egg-info/
 s2sml/__pycache__/
-hackathon_results/err
-testGustInternet_results/err
-*/echo_opt/
-results_week3_SH_515/.ipynb_checkpoints/
+results_gust/*/err
+results_gust/*/echo_opt/
+results_gust/*/.ipynb_checkpoints/
 notebooks/.ipynb_checkpoints/
