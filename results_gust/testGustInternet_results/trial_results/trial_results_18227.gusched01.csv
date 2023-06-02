@@ -1,0 +1,2 @@
+,trial,learning_rate,norm,train_batch_size,training_loss,model_name,encoder_name,epoch,train_loss,train_corr,valid_mae,valid_corr,valid_perc,valid_rmse,valid_ssim,lr,pruned
+0,0,0.004805581693488654,minmax,50,huber,unet,vgg11,1,0.0009540900184005938,0.9381216834573185,0.21899916976690292,0.619420737028122,0.019689596258103848,0.05582749471068382,0.6586121022701263,0.004805581693488654,0

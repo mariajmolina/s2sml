@@ -1,0 +1,54 @@
+seed: 1000
+save_loc: "/glade/work/kdagon/s2sml/testGust_results/echo_opt" # changed path
+img_gen: True # made True
+# images generated every other img_iter (don't make zero! 'epoch divisible by')
+# # e.g., make 1 if image wanted every epoch; 5 if every fifth epoch, etc.
+img_iter: 5 # made divisible by #epochs
+data:
+    homedir: '/glade/gust/scratch/molina/' # modified for gust
+    var: "tas2m" # switch variable
+    wks: 2
+    dxdy: 31  # dxdy-1 
+    lon0: 250.0
+    lat0: 30
+    norm: "minmax"
+
+# transforms:
+#     training:
+#         RandomVerticalFlip:
+#             rate: 0.5
+#         RandomHorizontalFlip: 
+#             rate: 0.5
+#         Normalize:
+#             mode: 'sym'
+#         ToTensor: True
+#     validation:
+#         Normalize:
+#             mode: 'sym'
+#         ToTensor: True
+#     inference:
+#         Normalize:
+#             mode: 'sym'
+                  
+model:
+    name: "unet"
+    #encoder_name: "resnet18" # commented out
+    #encoder_weights: "imagenet" # commented out
+    #decoder_attention_type: "scse"
+    in_channels: 4
+    classes: 1
+    activation: "sigmoid" 
+    
+optimizer:
+    learning_rate: 0.001
+    weight_decay: 0.0
+    
+trainer:
+    epochs: 5 # changed epochs
+    train_batch_size: 32
+    valid_batch_size: 32
+    batches_per_epoch: 100
+    lr_patience: 2
+    stopping_patience: 5
+    loss: "smooth"
+    metric: "valid_mae"
