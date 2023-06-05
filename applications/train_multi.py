@@ -26,10 +26,10 @@ import s2sml.torch_s2s_dataset as torch_s2s_dataset
 from s2sml.load_loss import load_loss
 from s2sml.load_model import load_model
 from s2sml.pareto import pareto_front
+from s2sml.scheduler import CosineAnnealingWarmupRestarts
 
 import gc
 from piqa import SSIM
-from cosine_annealing_warmup import CosineAnnealingWarmupRestarts
 
 #print('loading cuda')
 is_cuda = torch.cuda.is_available()
