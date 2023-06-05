@@ -17,6 +17,8 @@ dependencies:
   - python=3.10.9
   - pytorch=2.0.0
   - pytorch-cuda=11.7
+  - scikit-learn=1.2.2
+  - scikit-image=0.19.3
   - torchvision=0.15.0
   - xarray=2023.3.0
   - xesmf=0.7.1
