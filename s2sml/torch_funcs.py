@@ -757,6 +757,7 @@ def corrcoef(pred, target):
     elif val_to_return >= 0.0:
         return (pred_n * target_n).sum()
 
+
 def weighted_mse_loss(output, label, lat_weights, reduction='sum'):
     """
     Latitude weighted MSE loss function for pytorch model.
