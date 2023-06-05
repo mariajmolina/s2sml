@@ -740,7 +740,7 @@ def corrcoef(pred, target):
     # if predictions are constant, norm would be zero, and correlation would be infinitely small, corrected by 0.0001
     if pred_norm == 0: 
         val_to_return = pred_norm.clone()
-        print('we have constant predictions!')
+        #print('we have constant predictions!')
         val_to_return[val_to_return==0] = 0.0001
         return val_to_return
 
@@ -751,7 +751,7 @@ def corrcoef(pred, target):
 
     # don't want to minimize negative values!
     if val_to_return < 0.0:
-        print('we have a negative!', val_to_return)
+        #print('we have a negative!', val_to_return)
         return (pred_n * target_n).sum() * (-0.0001)
         
     elif val_to_return >= 0.0:
