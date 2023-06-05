@@ -7,9 +7,11 @@ import random
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from skimage import filters
 
 import torch
 from torch.utils.data import DataLoader
+# from fvcore.nn import FlopCountAnalysis
 import lpips
 
 from echo.src.base_objective import BaseObjective
@@ -43,6 +45,40 @@ def seed_everything(seed=1234):
         torch.cuda.manual_seed(seed)
         torch.backends.cudnn.benchmark = True
         torch.backends.cudnn.deterministic = True
+
+
+def avg_grad(X, T, Y):
+    """Average Magnitude of the Gradient
+    (from AI2ES sharpness repo)
+    
+    Edge magnitude is computed as:
+        sqrt(Gx^2 + Gy^2)
+    """
+    def _f(x): return np.mean(filters.sobel(x))
+    return _f(X), _f(T), _f(Y)
+
+
+def grab_extremes(lbl_, other, var_):
+    """
+    Grab most `extreme` samples from batch labels.
+    Grab corresponding input or ml output for mse.
+    
+    Args:
+        lbl_: labels
+        other: other data
+        var_: variable; string
+    """
+    # use both max and min for temp
+    if var_ == "tas2m":
+        lbl_ext = lbl_[torch.where((lbl_==lbl_.max())|(lbl_==lbl_.min()))[0]]
+        oth_ext = other[torch.where((lbl_==lbl_.max())|(lbl_==lbl_.min()))[0]]
+    
+    # only use max for precip
+    elif var_ == "prsfc":
+        lbl_ext = lbl_[torch.where(lbl_==lbl_.max())[0]]
+        oth_ext = other[torch.where(lbl_==lbl_.max())[0]]
+        
+    return oth_ext, lbl_ext
 
 
 class SSIMLoss(SSIM):
@@ -80,9 +116,21 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
     model.train()
     
     # setting the running metrics to zero
-    running_loss = 0.0
+    running_loss  = 0.0
     corrcoef_loss = 0.0
     corrcoef_true = 0.0
+    corrcoef_cust = 0.0
+    
+    # mse/mae per batch
+    mse_custom = 0.0
+    mae_custom = 0.0
+    mse_metric_batch = torch.nn.MSELoss().to(device)
+    mae_metric_batch = torch.nn.L1Loss().to(device)
+    
+    # sharpness metric
+    grad_inp = 0.0 # cesm
+    grad_lbl = 0.0 # era5
+    grad_out = 0.0 # ML
     
     # loop through data in the loader
     for data in dataloader:
@@ -95,19 +143,24 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
         img_label = data["label"].squeeze(dim=2)
         img_label = img_label.to(device, dtype=torch.float)
         
-        # set the gradients to zero
-        optimizer.zero_grad()
+        optimizer.zero_grad() # set the gradients to zero
         
-        # predict using the model
-        outputs = model(img_noisy)
-
-        # measure the loss with model output vs labels:
-        loss = criterion(outputs, img_label)
+        outputs = model(img_noisy) # predict using the ML model
         
-        # correlation coefficient measurement for the model output vs labels
-        closs = torch_funcs.corrcoef(outputs, img_label)
-        # correlation coefficient measurement for the raw input vs labels
-        tloss = torch_funcs.corrcoef(img_noisy[:, nc - 1 : nc, :, :], img_label)
+        loss = criterion(outputs, img_label) # loss: ML vs labels
+        closs = torch_funcs.corrcoef(outputs, img_label) # corr: ML vs labels
+        tloss = torch_funcs.corrcoef(img_noisy[:,nc-1:nc,:,:], img_label) # corr: input vs labels
+        
+        # mse/mae per batch
+        mse_loss = mse_metric_batch(
+            outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        mae_loss = mae_metric_batch(
+            outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        
+        # sharpness
+        ginp, glbl, gout = avg_grad(img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+                                    img_label.cpu().detach().numpy().astype(float),
+                                    outputs.cpu().detach().numpy().astype(float))
         
         # update weights
         loss.backward()
@@ -118,22 +171,36 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0):
         running_loss += loss.item()
         corrcoef_loss += closs.item()
         corrcoef_true += tloss.item()
+        corrcoef_cust += tloss.item() / closs.item()
+        mse_custom += mse_loss.item()
+        mae_custom += mae_loss.item()
+        grad_inp += ginp.item()
+        grad_lbl += glbl.item()
+        grad_out += gout.item()
         
     # updates
     train_loss = running_loss / len(dataloader)
     coef_loss = corrcoef_loss / len(dataloader)
     coef_true = corrcoef_true / len(dataloader)
+    coef_cust = corrcoef_cust / len(dataloader)
+    mse_cust = mse_custom / len(dataloader)
+    mae_cust = mae_custom / len(dataloader)
+    grad_inp_cust = grad_inp / len(dataloader)
+    grad_lbl_cust = grad_lbl / len(dataloader)
+    grad_out_cust = grad_out / len(dataloader)
 
     # clear the cached memory from the gpu
     torch.cuda.empty_cache()
     gc.collect()
     
-    return train_loss, coef_loss, coef_true
+    return (train_loss, coef_loss, coef_true, coef_cust, mse_cust, mae_cust, 
+            grad_inp_cust, grad_lbl_cust, grad_out_cust)
 
 
 @torch.no_grad()
 def validate(model, dataloader, criterion, metrics, second_metrics, 
-             nc, epoch, trial_num, gen_img, img_iters, save_loc, data_split="valid"):
+             nc, epoch, trial_num, gen_img, gen_scatter, 
+             img_iters, save_loc, var, data_split="valid"):
     """
     Validation function.
 
@@ -142,26 +209,44 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         dataloader: pytorch dataloader
         criterion: loss function
         metrics: additional metrics for skill assessment
-        second_metrics: metrics for input data (e.g., data to be bias corrected)
+        second_metrics: metrics for input data (e.g., data to be bias corrected; cesm)
         nc: number of channels
         epoch: current epoch number
         trial_num: number of trial in optuna study
         gen_img: boolean; True if images wanted
+        gen_scatter: boolean; True if scatter plots wanted
         img_iters: integer; spaces out image frequency
         save_loc: location to save figures
+        var: variable string
         data_split: validation or test data, for figure saving; defaults to valid
     """
     # set model to eval mode
     model.eval()
     
-    # setting running metrics to zero
+    # set running metrics to zero
     running_loss = 0.0
     corrcoef_loss = 0.0
     corrcoef_true = 0.0
+    corrcoef_cust = 0.0
     
-    # grab the metrics dictionary
+    # grab metrics dictionary
     metrics_dict = defaultdict(list)
     second_metrics_dict = defaultdict(list)
+    
+    # mse/mae custom metrics
+    mse_custom = 0.0
+    mae_custom = 0.0
+    mse_metric_batch = torch.nn.MSELoss().to(device)
+    mae_metric_batch = torch.nn.L1Loss().to(device)
+    
+    # sharpness
+    grad_inp = 0.0 # cesm
+    grad_lbl = 0.0 # era5
+    grad_out = 0.0 # ML
+    
+    # extremes mse
+    mse_extr_loss = 0.0 # ml vs era5
+    mse_extr_true = 0.0 # cesm vs era5
     
     # loop thru data in loader
     for i, data in enumerate(dataloader):
@@ -174,8 +259,7 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         img_label = data["label"].squeeze(dim=2)
         img_label = img_label.to(device, dtype=torch.float)
         
-        # predict the model output
-        outputs = model(img_noisy)
+        outputs = model(img_noisy) # predict the model output
         
         # if images are to be saved, do this
         if gen_img:
@@ -186,7 +270,6 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
                 # save figs for later reference
                 # selecting random sample in batch to visualize
                 a_inp = img_noisy.cpu().detach().numpy()[:,nc-1,:,:]
-                print(int(a_inp.shape[0]))
                 samp_ = np.random.choice(np.arange(0,int(a_inp.shape[0]),1))
 
                 # change plt logging level otherwise get a lot of debug output
@@ -217,13 +300,66 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
                     f"{save_loc}/trial{str(trial_num)}/{data_split}_lbl_{str(epoch)}_{str(trial_num)}.png", 
                     bbox_inches='tight')
                 plt.close()
+        
+        # compute metrics
+        loss = criterion(outputs, img_label) # loss: ML vs era5
+        closs = torch_funcs.corrcoef(outputs, img_label) # corr: ML vs era5
+        tloss = torch_funcs.corrcoef(img_noisy[:,nc-1:nc,:,:], img_label) # corr: cesm vs era5
+        
+        # if scatter images are to be saved, do this
+        if gen_scatter:
 
-        # evaluate the model output vs labels
-        loss = criterion(outputs, img_label)
-        # evaluate correlation coefficient of model output vs labels
-        closs = torch_funcs.corrcoef(outputs, img_label)
-        # evaluate correlation coefficient of cesm vs labels
-        tloss = torch_funcs.corrcoef(img_noisy[:, nc - 1 : nc, :, :], img_label)
+            # only if frequency criteria is met, based on epoch
+            if int(epoch) % img_iters == 0:
+
+                # save figs for later reference
+                # input data
+                a_inp = img_noisy.cpu().detach().numpy()[:,nc-1,:,:].ravel()
+                # output data
+                b_out = outputs.cpu().detach().numpy()[:,0,:,:].ravel()
+                # label
+                c_lbl = img_label.cpu().detach().numpy()[:,0,:,:].ravel()
+
+                # change plt logging level otherwise get a lot of debug output
+                plt.set_loglevel(level='warning')
+
+                # cesm vs era5
+                im = plt.scatter(a_inp, c_lbl, s=5, color='k')
+                plt.ylabel('ERA5')
+                plt.xlabel('CESM')
+                
+                plt.savefig(
+                    f"{save_loc}/trial{str(trial_num)}/scatter_{data_split}_inp_{str(epoch)}_{str(trial_num)}.png", 
+                    bbox_inches='tight')
+                plt.close()
+                
+                # ML vs era5
+                im = plt.scatter(b_out, c_lbl, s=5, color='k')
+                plt.ylabel('ERA5')
+                plt.xlabel('ML')
+                
+                plt.savefig(
+                    f"{save_loc}/trial{str(trial_num)}/scatter_{data_split}_out_{str(epoch)}_{str(trial_num)}.png", 
+                    bbox_inches='tight')
+                plt.close()
+        
+        # mse/mae per batch
+        mse_loss = mse_metric_batch(
+            outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        mae_loss = mae_metric_batch(
+            outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        
+        # sharpness
+        ginp, glbl, gout = avg_grad(img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+                                    img_label.cpu().detach().numpy().astype(float),
+                                    outputs.cpu().detach().numpy().astype(float))
+        
+        # mse for extreme cases in batch (ml output)
+        out_tmp, lbl_tmp = grab_extremes(img_label, outputs, var)
+        mse_extr_outp = mse_metric_batch(out_tmp, lbl_tmp)
+        # cesm fields
+        img_tmp, lbl_tmp = grab_extremes(img_label, img_noisy[:,nc-1:nc,:,:], var)
+        mse_extr_cesm = mse_metric_batch(img_tmp, lbl_tmp)
 
         # ml model output eval
         for k, v in metrics.items():
@@ -244,22 +380,43 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
             except AttributeError:  # AttributeError
                 second_metrics_dict[k].append(v(img_noisy[:, nc - 1 : nc, :, :], 
                                                 img_label))
-                
+        
         # update metrics
         running_loss += loss.item()
         corrcoef_loss += closs.item()
         corrcoef_true += tloss.item()
+        corrcoef_cust += tloss.item() / closs.item()
+        mse_custom += mse_loss.item()
+        mae_custom += mae_loss.item()
+        grad_inp += ginp.item()
+        grad_lbl += glbl.item()
+        grad_out += gout.item()
+        mse_extr_loss += mse_extr_outp.item()
+        mse_extr_true += mse_extr_cesm.item()
         
     # update running metrics
     val_loss = running_loss / len(dataloader)
     coef_loss = corrcoef_loss / len(dataloader)
     coef_true = corrcoef_true / len(dataloader)
+    coef_cust = corrcoef_cust / len(dataloader)
+    mse_cust = mse_custom / len(dataloader)
+    mae_cust = mae_custom / len(dataloader)
+    grad_inp_cust = grad_inp / len(dataloader)
+    grad_lbl_cust = grad_lbl / len(dataloader)
+    grad_out_cust = grad_out / len(dataloader)
+    mse_ex_loss = mse_extr_loss / len(dataloader)
+    mse_ex_true = mse_extr_true / len(dataloader)
     
     # place stuff in dictionary
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
     second_metrics_dict = {k: np.mean(v) for k, v in second_metrics_dict.items()}
+    
+    # flops = FlopCountAnalysis(model, img_noisy)
+    # flop_count = flops.total()
 
-    return val_loss, coef_loss, coef_true, metrics_dict, second_metrics_dict
+    return (val_loss, coef_loss, coef_true, coef_cust, mse_cust, mae_cust,
+            grad_inp_cust, grad_lbl_cust, grad_out_cust, # flop_count, 
+            mse_ex_loss, mse_ex_true, metrics_dict, second_metrics_dict)
 
 
 def trainer(conf, trial=False, verbose=True):
@@ -288,6 +445,7 @@ def trainer(conf, trial=False, verbose=True):
     
     # whether to generate image output and frequency
     gen_img = conf["img_gen"]
+    gen_scatter = conf["scatter_gen"]
     if gen_img:
         img_iters = conf["img_iter"]
     if not gen_img:
@@ -296,7 +454,6 @@ def trainer(conf, trial=False, verbose=True):
     # Data
     var = conf["data"]["var"]
     wks = conf["data"]["wks"]
-    
     dxdy = conf["data"]["dxdy"]
     lat0 = conf["data"]["lat0"]
     lon0 = conf["data"]["lon0"]
@@ -318,7 +475,7 @@ def trainer(conf, trial=False, verbose=True):
         feat_lats=True,
         feat_lons=True,
         startdt="1999-02-01",
-        enddt="2015-12-31",
+        enddt="2014-12-31",
         homedir=homedir,
     )
     
@@ -353,7 +510,7 @@ def trainer(conf, trial=False, verbose=True):
         feat_topo=True,
         feat_lats=True,
         feat_lons=True,
-        startdt="2016-01-01",
+        startdt="2015-01-01",
         enddt="2017-12-31",
         homedir=homedir,
     )
@@ -382,7 +539,7 @@ def trainer(conf, trial=False, verbose=True):
         train, batch_size=train_batch_size, shuffle=True, drop_last=True
     )
     valid_loader = DataLoader(
-        valid, batch_size=valid_batch_size, shuffle=False, drop_last=False
+        valid, batch_size=valid_batch_size, shuffle=True, drop_last=True
     )
     tests_loader = DataLoader(
         tests, batch_size=valid_batch_size, shuffle=False, drop_last=False
@@ -404,15 +561,15 @@ def trainer(conf, trial=False, verbose=True):
     # Metrics
     validation_metrics = {
         "perc": lpips.LPIPS(net="alex").to(device),
-        "rmse": torch.nn.MSELoss().to(device),
-        "mae":  torch.nn.L1Loss().to(device),
+        "mse": torch.nn.MSELoss().to(device),
+        "mae": torch.nn.L1Loss().to(device),
         "ssim": SSIMLoss(n_channels=1).to(device).eval(),
     }
     # metrics for the baseline data (cesm)
     validation_metrics_cesm = {
         "cesm_perc": lpips.LPIPS(net="alex").to(device),
-        "cesm_rmse": torch.nn.MSELoss().to(device),
-        "cesm_mae":  torch.nn.L1Loss().to(device),
+        "cesm_mse": torch.nn.MSELoss().to(device),
+        "cesm_mae": torch.nn.L1Loss().to(device),
         "cesm_ssim": SSIMLoss(n_channels=1).to(device).eval(),
     }
     
@@ -420,75 +577,91 @@ def trainer(conf, trial=False, verbose=True):
         optimizer, patience=lr_patience, verbose=verbose, min_lr=1.0e-13
     )
     
-    # Train and validate
+    # dictionary to store final metrics
     results_dict = defaultdict(list)
     
+    # folder to save trial images
     if gen_img:
-        # folder to save trial images
         os.makedirs(save_loc+"/trial"+str(int(trial.number)), exist_ok=True)
     
+    # train and validate
     for epoch in list(range(epochs)):
         
-        t_loss, t_corr, t_true = train_one_epoch(
+        # train
+        tloss, tcorr, ttrue, tcust, tmsecust, tmaecust, tginp, tglbl, tgout = train_one_epoch(
             model, train_loader, optimizer, train_loss, nc
         )
-        v_loss, v_corr, v_true, metrics, cesm_metrics = validate(
+        # validate
+        vloss, vcorr, vtrue, vcust, vmsecust, vmaecust, vginp, vglbl, vgout, vmse_x, vmse_x_, metrics, cesm_metrics = validate(
             model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, int(trial.number), gen_img, img_iters, save_loc, data_split="valid"
+            nc, epoch, int(trial.number), gen_img, gen_scatter, img_iters, save_loc, var, data_split="valid"
         )
-        e_loss, e_corr, e_true, emetrics, cesm_emetrics = validate(
+        # test
+        eloss, ecorr, etrue, ecust, emsecust, emaecust, eginp, eglbl, egout, emse_x, emse_x_, emetrics, cesm_emetrics = validate(
             model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, int(trial.number), gen_img, img_iters, save_loc, data_split="eval"
+            nc, epoch, int(trial.number), gen_img, gen_scatter, img_iters, save_loc, var, data_split="eval"
         )
-
-        assert np.isfinite(v_loss), "Something is wrong, the validation loss is NaN"
+        
+        assert np.isfinite(vloss), "Something is wrong, the validation loss is NaN"
         
         # place metrics from the training and validation in the dictionary to save out
-        # the epoch
-        results_dict["epoch"].append(epoch)
+        results_dict["epoch"].append(epoch) # the epoch
+        results_dict["lr"].append(optimizer.param_groups[0]["lr"]) # learning rate
         
-        # the train loss and correlation value
-        results_dict["train_loss"].append(t_loss)
-        results_dict["train_corr"].append(t_corr)
-        results_dict["tcesm_corr"].append(t_true)
-        results_dict["train_custom"].append(t_true / t_corr)
+        # training set
+        results_dict["train_loss"].append(tloss) # loss from echo/optuna
+        results_dict["train_corr"].append(tcorr) # correlation (ML/era5)
+        results_dict["tcesm_corr"].append(ttrue) # correlation (cesm/era5)
+        results_dict["tcorr_cust"].append(tcust) # correlation (ML/era5//cesm/era5)
+        results_dict["tmse_cust"].append(tmsecust) # mse (ML/era5//cesm/era5)
+        results_dict["tmae_cust"].append(tmaecust) # mae (ML/era5//cesm/era5)
+        results_dict["tgrad_inp"].append(tginp) # horizontal gradient (cesm)
+        results_dict["tgrad_lbl"].append(tglbl) # horizontal gradient (era5)
+        results_dict["tgrad_out"].append(tgout) # horizontal gradient (ML)
         
-        # the validation loss and corr value
-        results_dict["valid_loss"].append(v_loss)
-        results_dict["valid_corr"].append(v_corr)
-        results_dict["vcesm_corr"].append(v_true)
-        results_dict["valid_custom"].append(v_true / v_corr)
+        # validation set
+        results_dict["valid_loss"].append(vloss) # loss from echo/optuna
+        results_dict["valid_corr"].append(vcorr) # correlation (ML/era5)
+        results_dict["vcesm_corr"].append(vtrue) # correlation (cesm/era5)
+        results_dict["vcorr_cust"].append(vcust) # correlation (ML/era5//cesm/era5)
+        results_dict["vmse_cust"].append(vmsecust) # mse (ML/era5//cesm/era5)
+        results_dict["vmae_cust"].append(vmaecust) # mae (ML/era5//cesm/era5)
+        results_dict["vgrad_inp"].append(vginp) # horizontal gradient (cesm)
+        results_dict["vgrad_lbl"].append(vglbl) # horizontal gradient (era5)
+        results_dict["vgrad_out"].append(vgout) # horizontal gradient (ML)
+        # results_dict["vflop"].append(vflop) # flops (floating point operations per second)
+        results_dict["vmse_extreme_outp"].append(vmse_x) # mse for extremes (ML vs era5)
+        results_dict["vmse_extreme_cesm"].append(vmse_x_) # mse for extremes (cesm vs era5)
         
-        # other metrics computed from the validation set
+        # other metrics (validation set)
         for k, v in metrics.items():
             results_dict[f"valid_{k}"].append(v)
         for k, v in cesm_metrics.items():
             results_dict[f"valid_{k}"].append(v)
         
-        results_dict["valid_custom_second"].append(
-            results_dict["valid_rmse"][-1] / results_dict["valid_cesm_rmse"][-1])
-        results_dict["valid_custom_third"].append(
-            results_dict["valid_mae"][-1] / results_dict["valid_cesm_mae"][-1])
+        # evaluation set
+        results_dict["evals_loss"].append(eloss) # loss from echo/optuna
+        results_dict["evals_corr"].append(ecorr) # correlation (ML/era5)
+        results_dict["ecesm_corr"].append(etrue) # correlation (cesm/era5)
+        results_dict["ecorr_cust"].append(ecust) # correlation (ML/era5//cesm/era5)
+        results_dict["emse_cust"].append(emsecust) # mse (ML/era5//cesm/era5)
+        results_dict["emae_cust"].append(emaecust) # mae (ML/era5//cesm/era5)
+        results_dict["egrad_inp"].append(eginp) # horizontal gradient (cesm)
+        results_dict["egrad_lbl"].append(eglbl) # horizontal gradient (era5)
+        results_dict["egrad_out"].append(egout) # horizontal gradient (ML)
+        # results_dict["eflop"].append(eflop) # flops (floating point operations per second)
+        results_dict["emse_extreme_outp"].append(emse_x) # mse for extremes (ML vs era5)
+        results_dict["emse_extreme_cesm"].append(emse_x_) # mse for extremes (cesm vs era5)
         
-        # the test/evaluation loss and corr value
-        results_dict["evals_loss"].append(e_loss)
-        results_dict["evals_corr"].append(e_corr)
-        results_dict["ecesm_corr"].append(e_true)
-        results_dict["evals_custom"].append(e_true / e_corr)
-        
-        # other metrics computed from the tests/evaluation set
+        # other metrics (evaluation set)
         for k, v in emetrics.items():
             results_dict[f"evals_{k}"].append(v)
         for k, v in cesm_emetrics.items():
             results_dict[f"evals_{k}"].append(v)
         
-        results_dict["evals_custom_second"].append(
-            results_dict["evals_rmse"][-1] / results_dict["evals_cesm_rmse"][-1])
-        results_dict["evals_custom_third"].append(
-            results_dict["evals_mae"][-1] / results_dict["evals_cesm_mae"][-1])
-        
-        # save the learning rate
-        results_dict["lr"].append(optimizer.param_groups[0]["lr"])
+        # number of ML model parameters and trainable parameters, respectively
+        results_dict["total_params"].append(sum(p.numel() for p in model.parameters()))
+        results_dict["train_params"].append(sum(p.numel() for p in model.parameters() if p.requires_grad))
 
         # Save the dataframe to disk
         df = pd.DataFrame.from_dict(results_dict).reset_index()
