@@ -1,6 +1,8 @@
 log: True
 save_path: "/glade/work/kjmayer/research/ASD/s2sml/results/"
 
+# hello there
+
 pbs:
   jobs: 10
   kernel: "ncar_pylib /glade/work/$USER/py37"
