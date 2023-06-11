@@ -60,9 +60,8 @@ class S2SDataset(Dataset):
             self.dxdy=dxdy
             
         if self.region_ == 'random':
-            raise Exception('The random region option is deprecated. Please set to fixed.')
-            #self.dxdy=dxdy
-            #assert lon0 != None and lat0 != None, 'please set lat0 and lon0 to None'
+            self.dxdy=dxdy
+            self.lon0, self.lat0=self.rand_coords()
             
         self.feat_topo=feat_topo
         self.feat_lats=feat_lats
@@ -150,11 +149,9 @@ class S2SDataset(Dataset):
             
         # no extra features
         if not self.feat_topo and not self.feat_lats and not self.feat_lons:
-            # input features
-            img = xr.concat([self.coord_data['cesm']],dim='feature') 
+            img = xr.concat([self.coord_data['cesm']],dim='feature') # input features
         
-        # label
-        lbl = xr.concat([self.coord_data['era5']],dim='feature')
+        lbl = xr.concat([self.coord_data['era5']],dim='feature') # label
             
         return {'input': img.transpose('feature','sample','x','y').values, 
                 'label': lbl.transpose('feature','sample','x','y').values}
@@ -185,6 +182,20 @@ class S2SDataset(Dataset):
         }
         
         return weekdict_init[self.week], weekdict_end[self.week]
+    
+    
+    def rand_coords(self):
+        """
+        Get random coords.
+        Returns lon0, lat0.
+        """
+        range_x = np.arange(0., 359. + 1 - self.dxdy, 1)
+        range_y = np.arange(-90., 90. + 1 - self.dxdy, 1)
+
+        ax = np.random.choice(range_x, replace=False)
+        by = np.random.choice(range_y, replace=False)
+
+        return ax, by
     
     
     def zscore_compute(self, data):
@@ -286,11 +297,12 @@ class S2SDataset(Dataset):
             
             if not self.norm_pixel:
                 
-                weights = np.cos(np.deg2rad(tmp.y))
-                weights.name = "weights"
-                tmp_wght = tmp.weighted(weights)
+                # don't area weight for norm options
+                # weights = np.cos(np.deg2rad(tmp.y))
+                # weights.name = "weights"
+                # tmp_wght = tmp.weighted(weights)
                 
-                self.mean_val = tmp_wght.mean(skipna=True).values
+                self.mean_val = tmp.mean(skipna=True).values
                 self.std_val = tmp.std(skipna=True).values
                 
             if self.norm_pixel:
@@ -359,7 +371,7 @@ class S2SDataset(Dataset):
             var = 'anom'
             
         # coordinates (terrain and lat/lon features)
-        tmpcd = xr.open_dataset(self.homedir+'/ml_coords.nc').expand_dims('sample')
+        tmpcd = xr.open_dataset(self.homedir+'/ml_coordsv2.nc').expand_dims('sample')
         self.coord_data = self.box_cutter(tmpcd)
         
         # open files using lists and indices
@@ -373,45 +385,32 @@ class S2SDataset(Dataset):
     def box_cutter(self, ds1, ds2=None, cesm_help=False):
         """
         help slicing region
-        """
-        # if random/moving region is desired, do this
-        if self.region_ == 'random':
-            
-            raise Exception('The random region option is deprecated. Please set to fixed.')
-            
-            # this needs to be double checked (recent change)
-            #range_x = np.arange(0., 358. + 1 - self.dxdy, 1)
-            #range_y = np.arange(-90., 89. + 1 - self.dxdy, 1)
-
-            #ax = np.random.choice(range_x, replace=False)
-            #by = np.random.choice(range_y, replace=False)
-        
-        # if a fixed region is desired, do this
-        if self.region_ == 'fixed':
-            
-            ax = self.lon0
-            by = self.lat0
-            
+        if statements due to different coord names
+        """ 
         if not cesm_help:
             
             if np.any(ds2):
 
                 # slicing occurs here using data above
-                ds1 = ds1.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
-                ds2 = ds2.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
+                ds1 = ds1.sel(y=slice(self.lat0, self.lat0 + self.dxdy), 
+                              x=slice(self.lon0, self.lon0 + self.dxdy))
+                ds2 = ds2.sel(y=slice(self.lat0, self.lat0 + self.dxdy), 
+                              x=slice(self.lon0, self.lon0 + self.dxdy))
 
                 return ds1, ds2
 
             if not np.any(ds2):
 
                 # slicing occurs here using data above
-                ds1 = ds1.sel(y=slice(by, by + self.dxdy), x=slice(ax, ax + self.dxdy))
+                ds1 = ds1.sel(y=slice(self.lat0, self.lat0 + self.dxdy), 
+                              x=slice(self.lon0, self.lon0 + self.dxdy))
 
                 return ds1
             
         if cesm_help:
             
             # slicing occurs here using data above
-            ds1 = ds1.sel(lat=slice(by, by + self.dxdy), lon=slice(ax, ax + self.dxdy))
+            ds1 = ds1.sel(lat=slice(self.lat0, self.lat0 + self.dxdy), 
+                          lon=slice(self.lon0, self.lon0 + self.dxdy))
 
             return ds1
