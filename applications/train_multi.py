@@ -715,25 +715,9 @@ def trainer(conf, trial=False, verbose=True):
             torch.save(state_dict, f"{save_loc}/trial{str(trial_num)}/model_{str(trial_number)}.pt")
             
             break
-
-
+    
     if trial is False:
         return pd.DataFrame.from_dict(results_dict).reset_index()
-    
-    # the best epoch is based on the single chosen metric!
-    df = pd.DataFrame.from_dict(results_dict).reset_index()
-    costs = df[callback_metric].values
-    best_epochs = np.where(pareto_front(costs, callback_direction))[0]
-    best_costs = list(zip(best_epochs, list(costs[best_epochs])))
-    
-    if isinstance(callback_direction, list):
-        metric_callback_direction = callback_direction[0]  # change zero to index for metric
-    else:
-        metric_callback_direction = callback_direction
-
-    sign = False if "min" in metric_callback_direction else True
-    best_costs.sort(key = lambda x: x[1][0], reverse=sign)  # change zero to index for metric
-    best_epoch, best_cost = best_costs[0]
     
     # return the results from the respective dictionary
     results = {k: v[best_epoch] for k, v in results_dict.items()}
