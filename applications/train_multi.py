@@ -682,7 +682,7 @@ def trainer(conf, trial=False, verbose=True):
         # Save the dataframe to disk
         df = pd.DataFrame.from_dict(results_dict).reset_index()
         if verbose:
-            df.to_csv(f"{save_loc}/training_log{str(trial_number)}.csv", index=False)
+            df.to_csv(f"{save_loc}/trial{str(trial_num)}/training_log{str(trial_number)}.csv", index=False)
         
         # Call pareto and check the training callbacks
         costs = df[callback_metric].values
@@ -698,20 +698,22 @@ def trainer(conf, trial=False, verbose=True):
         best_costs.sort(key = lambda x: x[1][0], reverse=sign)  # change zero to index for metric
         best_epoch, best_cost = best_costs[0] # this zero is fine
         offset = epoch - best_epoch
-        
-        # save the best model (only if not using echo)
-        if offset == 0 and trial is False:
+
+        # Stop training if we have not improved after X epochs based on the defined metric
+        if offset >= stopping_patience:
+            
+            # save model
             state_dict = {
                 "epoch": epoch,
+                "offset": offset,
+                "stopping_patience": stopping_patience,
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "loss": conf["trainer"]["loss"],
                 "callback_metric": callback_metric[0], # change zero to index for metric
             }
-            torch.save(state_dict, f"{save_loc}/best.pt")
-
-        # Stop training if we have not improved after X epochs based on the defined metric
-        if offset >= stopping_patience:
+            torch.save(state_dict, f"{save_loc}/trial{str(trial_num)}/model_{str(trial_number)}.pt")
+            
             break
 
 
