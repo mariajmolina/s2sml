@@ -689,30 +689,37 @@ def trainer(conf, trial=False, verbose=True):
         best_epochs = np.where(pareto_front(costs, callback_direction))[0] # this zero is fine
         best_costs = list(zip(best_epochs, list(costs[best_epochs])))
         
-        if isinstance(callback_direction, list):
-            metric_callback_direction = callback_direction[0]  # change zero to index for metric
-        else:
-            metric_callback_direction = callback_direction
+        # choose metric/direction for stopping during first epoch
+        if epoch == 0:
+            if isinstance(callback_direction, list):
+                metric_index = np.random.choice(len(callback_metric))
+                metric_callback_direction = callback_direction[metric_index]
+                saving_metric_option = callback_metric[metric_index]
+            else:
+                metric_index = 0
+                metric_callback_direction = callback_direction
+                saving_metric_option = callback_metric
         
         sign = False if "min" in metric_callback_direction else True
-        best_costs.sort(key = lambda x: x[1][0], reverse=sign)  # change zero to index for metric
+        best_costs.sort(key = lambda x: x[1][metric_index], reverse=sign)
         best_epoch, best_cost = best_costs[0] # this zero is fine
         offset = epoch - best_epoch
-
-        # Stop training if we have not improved after X epochs based on the defined metric
+        
+        # Stop training if we have not improved after X epochs based on metric
         if offset >= stopping_patience:
             
             # save model
             state_dict = {
                 "epoch": epoch,
-                "offset": offset,
+                "best_epoch": best_epoch,
                 "stopping_patience": stopping_patience,
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "loss": conf["trainer"]["loss"],
-                "callback_metric": callback_metric[0], # change zero to index for metric
+                "callback_metric": saving_metric_option,
             }
-            torch.save(state_dict, f"{save_loc}/trial{str(trial_num)}/model_{str(trial_number)}.pt")
+            torch.save(state_dict, 
+                       f"{save_loc}/trial{str(trial_num)}/model_{str(trial_number)}.pt")
             
             break
     
