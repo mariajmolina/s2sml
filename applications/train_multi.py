@@ -682,7 +682,7 @@ def trainer(conf, trial=False, verbose=True):
         # Save the dataframe to disk
         df = pd.DataFrame.from_dict(results_dict).reset_index()
         if verbose:
-            df.to_csv(f"{save_loc}/trial{str(trial_num)}/training_log{str(trial_number)}.csv", index=False)
+            df.to_csv(f"{save_loc}/trial{str(trial_number)}/training_log{str(trial_number)}.csv", index=False)
         
         # Call pareto and check the training callbacks
         costs = df[callback_metric].values
@@ -719,7 +719,7 @@ def trainer(conf, trial=False, verbose=True):
                 "callback_metric": saving_metric_option,
             }
             torch.save(state_dict, 
-                       f"{save_loc}/trial{str(trial_num)}/model_{str(trial_number)}.pt")
+                       f"{save_loc}/trial{str(trial_number)}/model_{str(trial_number)}.pt")
             
             break
     
