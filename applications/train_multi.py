@@ -103,7 +103,7 @@ def reverse_negone(ds, minv, maxv):
     return (((ds + 1) / 2) * (maxv - minv)) + minv
 
 
-def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0, lr_scheduler=False):
+def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0, lr_schedule_name=False, lr_scheduler=False):
     """
     Training function.
 
@@ -181,7 +181,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0, lr_sc
         grad_lbl += glbl.item()
         grad_out += gout.item()
         
-        if lr_scheduler:
+        if lr_schedule_name == "Cosine":
             lr_scheduler.step()
         
     # updates
@@ -467,93 +467,10 @@ def trainer(conf, trial=False, verbose=True):
     lat0 = conf["data"]["lat0"]
     lon0 = conf["data"]["lon0"]
     norm = conf["data"]["norm"]
+    norm_pixel = conf["data"]["norm_pixel"]
+    region = conf["data"]["region"]
     
-    train = torch_s2s_dataset.S2SDataset(
-        week=wks,
-        variable=var,
-        norm=norm,
-        region="fixed",
-        minv=None,
-        maxv=None,
-        mnv=None,
-        stdv=None,
-        lon0=lon0,
-        lat0=lat0,
-        dxdy=dxdy,
-        feat_topo=True,
-        feat_lats=True,
-        feat_lons=True,
-        startdt="1999-02-01",
-        enddt="2014-12-31",
-        homedir=homedir,
-    )
-    
-    if not norm or norm == "None":
-        tmin = None
-        tmax = None
-        tmu = None
-        tsig = None
-    elif norm in ["minmax", "negone"]:
-        tmin = train.min_val
-        tmax = train.max_val
-        tmu = None
-        tsig = None
-    elif norm == "zscore":
-        tmin = None
-        tmax = None
-        tmu = train.mean_val
-        tsig = train.std_val
-    
-    valid = torch_s2s_dataset.S2SDataset(
-        week=wks,
-        variable=var,
-        norm=norm,
-        region="fixed",
-        minv=tmin,
-        maxv=tmax,
-        mnv=tmu,
-        stdv=tsig,
-        lon0=lon0,
-        lat0=lat0,
-        dxdy=dxdy,
-        feat_topo=True,
-        feat_lats=True,
-        feat_lons=True,
-        startdt="2015-01-01",
-        enddt="2017-12-31",
-        homedir=homedir,
-    )
-    
-    tests = torch_s2s_dataset.S2SDataset(
-        week=wks,
-        variable=var,
-        norm=norm,
-        region="fixed",
-        minv=tmin,
-        maxv=tmax,
-        mnv=tmu,
-        stdv=tsig,
-        lon0=lon0,
-        lat0=lat0,
-        dxdy=dxdy,
-        feat_topo=True,
-        feat_lats=True,
-        feat_lons=True,
-        startdt="2018-01-01",
-        enddt="2020-12-31",
-        homedir=homedir,
-    )
-    
-    train_loader = DataLoader(
-        train, batch_size=train_batch_size, shuffle=True, drop_last=True
-    )
-    valid_loader = DataLoader(
-        valid, batch_size=valid_batch_size, shuffle=True, drop_last=True
-    )
-    tests_loader = DataLoader(
-        tests, batch_size=valid_batch_size, shuffle=False, drop_last=False
-    )
-    
+    # Load model
     model = load_model(conf["model"]).to(device)
 
     # Optimizer
@@ -574,6 +491,7 @@ def trainer(conf, trial=False, verbose=True):
         "mae": torch.nn.L1Loss().to(device),
         "ssim": SSIMLoss(n_channels=1).to(device).eval(),
     }
+    
     # metrics for the baseline data (cesm)
     validation_metrics_cesm = {
         "cesm_perc": lpips.LPIPS(net="alex").to(device),
@@ -582,15 +500,23 @@ def trainer(conf, trial=False, verbose=True):
         "cesm_ssim": SSIMLoss(n_channels=1).to(device).eval(),
     }
     
-    lr_scheduler = CosineAnnealingWarmupRestarts(
-        optimizer,
-        first_cycle_steps=train.__len__(),
-        cycle_mult=1.0,
-        max_lr=conf["optimizer"]["learning_rate"],
-        min_lr=1e-3 * conf["optimizer"]["learning_rate"],
-        warmup_steps=50,
-        gamma=0.8,
-    )
+    if conf["optimizer"]["lr_scheduler"] == "Cosine":
+
+        lr_scheduler = CosineAnnealingWarmupRestarts(
+            optimizer,
+            first_cycle_steps=train.__len__(),
+            cycle_mult=1.0,
+            max_lr=conf["optimizer"]["learning_rate"],
+            min_lr=1e-3 * conf["optimizer"]["learning_rate"],
+            warmup_steps=50,
+            gamma=0.8,
+        )
+        
+    if conf["optimizer"]["lr_scheduler"] == "ReduceOnPlateau":
+        
+        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, patience=lr_patience, verbose=verbose, min_lr=1.0e-13
+        )
     
     # dictionary to store final metrics
     results_dict = defaultdict(list)
@@ -603,9 +529,101 @@ def trainer(conf, trial=False, verbose=True):
     # train and validate
     for epoch in list(range(epochs)):
         
+        # create train/test data each epoch if random regions used, otherwise, just once for fixed region
+        if (epoch == 0 and region == "fixed") or region == "random":
+        
+            train = torch_s2s_dataset.S2SDataset(
+                week=wks,
+                variable=var,
+                norm=norm,
+                norm_pixel=norm_pixel,
+                region=region,
+                minv=None,
+                maxv=None,
+                mnv=None,
+                stdv=None,
+                lon0=lon0,
+                lat0=lat0,
+                dxdy=dxdy,
+                feat_topo=True,
+                feat_lats=True,
+                feat_lons=True,
+                startdt="1999-02-01",
+                enddt="2014-12-31",
+                homedir=homedir,
+            )
+
+            if not norm or norm == "None":
+                tmin = None
+                tmax = None
+                tmu = None
+                tsig = None
+            elif norm in ["minmax", "negone"]:
+                tmin = train.min_val
+                tmax = train.max_val
+                tmu = None
+                tsig = None
+            elif norm == "zscore":
+                tmin = None
+                tmax = None
+                tmu = train.mean_val
+                tsig = train.std_val
+
+            valid = torch_s2s_dataset.S2SDataset(
+                week=wks,
+                variable=var,
+                norm=norm,
+                norm_pixel=norm_pixel,
+                region=region,
+                minv=tmin,
+                maxv=tmax,
+                mnv=tmu,
+                stdv=tsig,
+                lon0=lon0,
+                lat0=lat0,
+                dxdy=dxdy,
+                feat_topo=True,
+                feat_lats=True,
+                feat_lons=True,
+                startdt="2015-01-01",
+                enddt="2017-12-31",
+                homedir=homedir,
+            )
+
+            tests = torch_s2s_dataset.S2SDataset(
+                week=wks,
+                variable=var,
+                norm=norm,
+                norm_pixel=norm_pixel,
+                region=region,
+                minv=tmin,
+                maxv=tmax,
+                mnv=tmu,
+                stdv=tsig,
+                lon0=lon0,
+                lat0=lat0,
+                dxdy=dxdy,
+                feat_topo=True,
+                feat_lats=True,
+                feat_lons=True,
+                startdt="2018-01-01",
+                enddt="2020-12-31",
+                homedir=homedir,
+            )
+
+            train_loader = DataLoader(
+                train, batch_size=train_batch_size, shuffle=True, drop_last=True
+            )
+            valid_loader = DataLoader(
+                valid, batch_size=valid_batch_size, shuffle=True, drop_last=True
+            )
+            tests_loader = DataLoader(
+                tests, batch_size=valid_batch_size, shuffle=False, drop_last=False
+            )
+        
         # train
         tloss, tcorr, ttrue, tcust, tmsecust, tmaecust, tginp, tglbl, tgout = train_one_epoch(
-            model, train_loader, optimizer, train_loss, nc, lr_scheduler=lr_scheduler
+            model, train_loader, optimizer, train_loss, nc, lr_schedule_name=conf["optimizer"]["lr_scheduler"], lr_scheduler=lr_scheduler
         )
         # validate
         vloss, vcorr, vtrue, vcust, vmsecust, vmaecust, vginp, vglbl, vgout, vmse_x, vmse_x_, metrics, cesm_metrics = validate(
