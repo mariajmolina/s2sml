@@ -686,18 +686,17 @@ def trainer(conf, trial=False, verbose=True):
         
         # Call pareto and check the training callbacks
         costs = df[callback_metric].values
-        best_trials = np.where(pareto_front(costs, callback_direction))[0]
-        best_costs = list(zip(best_trials, list(costs[best_trials])))
+        best_epochs = np.where(pareto_front(costs, callback_direction))[0] # this zero is fine
+        best_costs = list(zip(best_epochs, list(costs[best_epochs])))
         
-        if isinstance(callback_metric, list):
-            topk_callback_metric = callback_metric[0]
+        if isinstance(callback_direction, list):
+            metric_callback_direction = callback_direction[0]  # change zero to index for metric
         else:
-            topk_callback_metric = callback_metric
+            metric_callback_direction = callback_direction
         
-        # sort using the first metric in the list
-        sign = -1 if "min" in topk_callback_metric else 1 
-        best_costs.sort(key = lambda x: sign * x[1][0])
-        best_epoch, best_cost = best_costs[0]
+        sign = False if "min" in metric_callback_direction else True
+        best_costs.sort(key = lambda x: x[1][0], reverse=sign)  # change zero to index for metric
+        best_epoch, best_cost = best_costs[0] # this zero is fine
         offset = epoch - best_epoch
         
         # save the best model (only if not using echo)
@@ -706,7 +705,8 @@ def trainer(conf, trial=False, verbose=True):
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
-                "loss": min(results_dict[metric]),
+                "loss": conf["trainer"]["loss"],
+                "callback_metric": callback_metric[0], # change zero to index for metric
             }
             torch.save(state_dict, f"{save_loc}/best.pt")
 
@@ -721,17 +721,16 @@ def trainer(conf, trial=False, verbose=True):
     # the best epoch is based on the single chosen metric!
     df = pd.DataFrame.from_dict(results_dict).reset_index()
     costs = df[callback_metric].values
-    best_trials = np.where(pareto_front(costs, callback_direction))[0]
-    best_costs = list(zip(best_trials, list(costs[best_trials])))
-
-    if isinstance(callback_metric, list):
-        topk_callback_metric = callback_metric[0]
+    best_epochs = np.where(pareto_front(costs, callback_direction))[0]
+    best_costs = list(zip(best_epochs, list(costs[best_epochs])))
+    
+    if isinstance(callback_direction, list):
+        metric_callback_direction = callback_direction[0]  # change zero to index for metric
     else:
-        topk_callback_metric = callback_metric
+        metric_callback_direction = callback_direction
 
-    # sort using the first metric in the list
-    sign = -1 if "min" in topk_callback_metric else 1 
-    best_costs.sort(key = lambda x: sign * x[1][0])
+    sign = False if "min" in metric_callback_direction else True
+    best_costs.sort(key = lambda x: x[1][0], reverse=sign)  # change zero to index for metric
     best_epoch, best_cost = best_costs[0]
     
     # return the results from the respective dictionary
