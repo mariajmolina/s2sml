@@ -284,7 +284,7 @@ class S2SDataset(Dataset):
             var = 'anom'
         
         # if mean and standard deviation are NOT provided do this (only era5)
-        if mnv == None or stdv == None:
+        if np.any(mnv) == None or np.any(stdv) == None:
         
             # open file
             tmp = xr.open_mfdataset(self.list_of_era5, concat_dim='sample', combine='nested')[var]
@@ -311,7 +311,7 @@ class S2SDataset(Dataset):
                 self.std_val = tmp.std('sample', skipna=True).values
             
         # if mean and standard deviation ARE provided do this
-        if mnv != None and stdv != None:
+        if np.any(mnv) != None and np.any(stdv) != None:
             
             self.mean_val = mnv
             self.std_val = stdv
@@ -330,7 +330,7 @@ class S2SDataset(Dataset):
             var = 'anom'
         
         # if min and max are NOT provided do this (only era5)
-        if minv == None or maxv == None:
+        if np.any(minv) == None or np.any(maxv) == None:
             
             # open file
             tmp = xr.open_mfdataset(self.list_of_era5, concat_dim='sample', combine='nested')[var]
@@ -352,7 +352,7 @@ class S2SDataset(Dataset):
                 self.min_val = tmp.min('sample', skipna=True).values
             
         # if min and max ARE provided do this
-        if minv != None and maxv != None:
+        if np.any(minv) != None and np.any(maxv) != None:
             
             self.max_val = maxv
             self.min_val = minv

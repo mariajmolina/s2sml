@@ -726,18 +726,18 @@ def trainer(conf, trial=False, verbose=True):
         # Stop training if we have not improved after X epochs based on metric
         if offset >= stopping_patience:
             
-            # save model
-            state_dict = {
-                "epoch": epoch,
-                "best_epoch": best_epoch,
-                "stopping_patience": stopping_patience,
-                "model_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "loss": conf["trainer"]["loss"],
-                "callback_metric": saving_metric_option,
-            }
-            torch.save(state_dict, 
-                       f"{save_loc}/trial{str(trial_number)}/model_{str(trial_number)}.pt")
+            # save model (pausing this due to memory)
+            #state_dict = {
+            #    "epoch": epoch,
+            #    "best_epoch": best_epoch,
+            #    "stopping_patience": stopping_patience,
+            #    "model_state_dict": model.state_dict(),
+            #    "optimizer_state_dict": optimizer.state_dict(),
+            #    "loss": conf["trainer"]["loss"],
+            #    "callback_metric": saving_metric_option,
+            #}
+            #torch.save(state_dict, 
+            #           f"{save_loc}/trial{str(trial_number)}/model_{str(trial_number)}.pt")
             
             break
     
