@@ -468,6 +468,7 @@ def trainer(conf, trial=False, verbose=True):
     lon0 = conf["data"]["lon0"]
     norm = conf["data"]["norm"]
     norm_pixel = conf["data"]["norm_pixel"]
+    dual_norm = conf["data"]["dual_norm"]
     region = conf["data"]["region"]
     
     # Load model
@@ -537,11 +538,16 @@ def trainer(conf, trial=False, verbose=True):
                 variable=var,
                 norm=norm,
                 norm_pixel=norm_pixel,
+                dual_norm=dual_norm,
                 region=region,
                 minv=None,
                 maxv=None,
+                mini=None,
+                maxi=None,
                 mnv=None,
                 stdv=None,
+                mni=None,
+                stdi=None,
                 lon0=lon0,
                 lat0=lat0,
                 dxdy=dxdy,
@@ -554,31 +560,62 @@ def trainer(conf, trial=False, verbose=True):
             )
 
             if not norm or norm == "None":
-                tmin = None
-                tmax = None
+                
+                # min-max
+                tmin = None # era5
+                tmax = None # era5
+                tmin_inp = None # cesm
+                tmax_inp = None # cesm
+                
+                # z-score
                 tmu = None
                 tsig = None
+                tmu_inp = None
+                tsig_inp = None
+                
             elif norm in ["minmax", "negone"]:
+                
+                # min-max
                 tmin = train.min_val
                 tmax = train.max_val
+                tmin_inp = train.min_inp
+                tmax_inp = train.max_inp
+                
+                # z-score
                 tmu = None
                 tsig = None
+                tmu_inp = None
+                tsig_inp = None
+                
             elif norm == "zscore":
+                
+                # min-max
                 tmin = None
                 tmax = None
+                tmin_inp = None
+                tmax_inp = None
+                
+                # z-score
                 tmu = train.mean_val
                 tsig = train.std_val
+                tmu_inp = train.mean_inp
+                tsig_inp = train.std_inp
 
             valid = torch_s2s_dataset.S2SDataset(
                 week=wks,
                 variable=var,
                 norm=norm,
                 norm_pixel=norm_pixel,
+                dual_norm=dual_norm,
                 region=region,
                 minv=tmin,
                 maxv=tmax,
+                mini=tmin_inp,
+                maxi=tmax_inp,
                 mnv=tmu,
                 stdv=tsig,
+                mni=tmu_inp,
+                stdi=tsig_inp,
                 lon0=lon0,
                 lat0=lat0,
                 dxdy=dxdy,
@@ -595,11 +632,16 @@ def trainer(conf, trial=False, verbose=True):
                 variable=var,
                 norm=norm,
                 norm_pixel=norm_pixel,
+                dual_norm=dual_norm,
                 region=region,
                 minv=tmin,
                 maxv=tmax,
+                mini=tmin_inp,
+                maxi=tmax_inp,
                 mnv=tmu,
                 stdv=tsig,
+                mni=tmu_inp,
+                stdi=tsig_inp,
                 lon0=lon0,
                 lat0=lat0,
                 dxdy=dxdy,
