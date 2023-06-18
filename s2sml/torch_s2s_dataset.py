@@ -251,9 +251,16 @@ class S2SDataset(Dataset):
         Function for normalizing data prior to training using z-score.
         """
         if not inpvar:
+            
             return (data - self.mean_val) / self.std_val
         
         if inpvar:
+            
+            # need to convert precip cesm file
+            if self.variable_ == 'prsfc':
+                
+                data = data * 84600 # convert kg/m2/s to mm/day
+            
             return (data - self.mean_inp) / self.std_inp
 
 
@@ -262,9 +269,16 @@ class S2SDataset(Dataset):
         Min max computation.
         """
         if not inpvar:
+            
             return (data - self.min_val) / (self.max_val - self.min_val)
         
         if inpvar:
+            
+            # need to convert precip cesm file
+            if self.variable_ == 'prsfc':
+                
+                data = data * 84600 # convert kg/m2/s to mm/day
+            
             return (data - self.min_inp) / (self.max_inp - self.min_inp)
     
     
@@ -273,9 +287,16 @@ class S2SDataset(Dataset):
         Scale between negative 1 and positive 1.
         """
         if not inpvar:
+            
             return (2 * (data - self.min_val) / (self.max_val - self.min_val)) - 1
         
         if inpvar:
+            
+            # need to convert precip cesm file
+            if self.variable_ == 'prsfc':
+                
+                data = data * 84600 # convert kg/m2/s to mm/day
+            
             return (2 * (data - self.min_inp) / (self.max_inp - self.min_inp)) - 1
     
     
@@ -351,11 +372,6 @@ class S2SDataset(Dataset):
 
                 # open file
                 tmp = xr.open_mfdataset(self.list_of_era5, concat_dim='sample', combine='nested')[var]
-
-                # need to convert precip era5 file
-                if self.variable_ == 'prsfc':
-                    tmp = tmp / 84600 # convert mm/day back to kg/m2/s
-
                 tmp = self.box_cutter(tmp)
 
                 if not self.norm_pixel:
@@ -458,11 +474,6 @@ class S2SDataset(Dataset):
 
                 # open file
                 tmp = xr.open_mfdataset(self.list_of_era5, concat_dim='sample', combine='nested')[var]
-                
-                # need to convert precip era5 file
-                if self.variable_ == 'prsfc':
-                    tmp = tmp / 84600 # convert from mm/day to kg/m2/s
-                
                 tmp = self.box_cutter(tmp)
 
                 if not self.norm_pixel:
