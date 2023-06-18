@@ -11,7 +11,6 @@ from skimage import filters
 
 import torch
 from torch.utils.data import DataLoader
-# from fvcore.nn import FlopCountAnalysis # doesn't work with certain ML models
 import lpips
 
 from echo.src.base_objective import BaseObjective
@@ -61,6 +60,17 @@ def avg_grad(X, T, Y):
     return _f(X), _f(T), _f(Y)
 
 
+def batch_grad(X, T, Y):
+    """Average Magnitude of the Gradient
+    (from AI2ES sharpness repo)
+    
+    Edge magnitude is computed as:
+        sqrt(Gx^2 + Gy^2)
+    """
+    def _f(x): return filters.sobel(x)
+    return _f(X), _f(T), _f(Y)
+
+
 def grab_extremes(lbl_, other, var_):
     """
     Grab most `extreme` samples from batch labels.
@@ -103,7 +113,8 @@ def reverse_negone(ds, minv, maxv):
     return (((ds + 1) / 2) * (maxv - minv)) + minv
 
 
-def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0, lr_schedule_name=False, lr_scheduler=False):
+def train_one_epoch(model, dataloader, optimizer, criterion, nc, 
+                    clip=1.0, lr_schedule_name=False, lr_scheduler=False):
     """
     Training function.
 
@@ -134,6 +145,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0, lr_sc
     grad_inp = 0.0 # cesm
     grad_lbl = 0.0 # era5
     grad_out = 0.0 # ML
+    mae_grad = 0.0
     
     # loop through data in the loader
     for data in dataloader:
@@ -165,6 +177,13 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0, lr_sc
                                     img_label.cpu().detach().numpy().astype(float),
                                     outputs.cpu().detach().numpy().astype(float))
         
+        # sharpness mae
+        ginp_shrp, glbl_shrp, gout_shrp = batch_grad(
+                                    img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+                                    img_label.cpu().detach().numpy().astype(float),
+                                    outputs.cpu().detach().numpy().astype(float))
+        mae_shrp = np.mean(np.abs(gout_shrp - glbl_shrp)) / np.mean(np.abs(ginp_shrp - glbl_shrp))
+        
         # update weights
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
@@ -172,14 +191,20 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0, lr_sc
         
         # update metrics
         running_loss += loss.item()
-        corrcoef_loss += closs.item()
-        corrcoef_true += tloss.item()
-        corrcoef_cust += tloss.item() / closs.item()
+        try:
+            corrcoef_loss += closs.item() # corr: ML vs era5
+            corrcoef_true += tloss.item() # corr: cesm vs era5
+            corrcoef_cust += tloss.item() / closs.item()
+        except TypeError:
+            corrcoef_loss += 0.0001
+            corrcoef_true += 0.0001
+            corrcoef_cust += 100.
         mse_custom += mse_loss.item()
         mae_custom += mae_loss.item()
         grad_inp += ginp.item()
         grad_lbl += glbl.item()
         grad_out += gout.item()
+        mae_grad += mae_shrp.item()
         
         if lr_schedule_name == "Cosine":
             lr_scheduler.step()
@@ -194,13 +219,14 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, clip=1.0, lr_sc
     grad_inp_cust = grad_inp / len(dataloader)
     grad_lbl_cust = grad_lbl / len(dataloader)
     grad_out_cust = grad_out / len(dataloader)
+    mae_gradient = mae_grad / len(dataloader)
 
     # clear the cached memory from the gpu
     torch.cuda.empty_cache()
     gc.collect()
     
     return (train_loss, coef_loss, coef_true, coef_cust, mse_cust, mae_cust, 
-            grad_inp_cust, grad_lbl_cust, grad_out_cust)
+            grad_inp_cust, grad_lbl_cust, grad_out_cust, mae_gradient)
 
 
 @torch.no_grad()
@@ -249,6 +275,7 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     grad_inp = 0.0 # cesm
     grad_lbl = 0.0 # era5
     grad_out = 0.0 # ML
+    mae_grad = 0.0
     
     # extremes mse
     mse_extr_loss = 0.0 # ml vs era5
@@ -360,6 +387,13 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
                                     img_label.cpu().detach().numpy().astype(float),
                                     outputs.cpu().detach().numpy().astype(float))
         
+        # sharpness mae
+        ginp_shrp, glbl_shrp, gout_shrp = batch_grad(
+                                    img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+                                    img_label.cpu().detach().numpy().astype(float),
+                                    outputs.cpu().detach().numpy().astype(float))
+        mae_shrp = np.mean(np.abs(gout_shrp - glbl_shrp)) / np.mean(np.abs(ginp_shrp - glbl_shrp))
+        
         # mse for extreme cases in batch (ml output)
         out_tmp, lbl_tmp = grab_extremes(img_label, outputs, var)
         mse_extr_outp = mse_metric_batch(out_tmp, lbl_tmp)
@@ -389,14 +423,20 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         
         # update metrics
         running_loss += loss.item()
-        corrcoef_loss += closs.item()
-        corrcoef_true += tloss.item()
-        corrcoef_cust += tloss.item() / closs.item()
+        try:
+            corrcoef_loss += closs.item() # corr: ML vs era5
+            corrcoef_true += tloss.item() # corr: cesm vs era5
+            corrcoef_cust += tloss.item() / closs.item()
+        except TypeError:
+            corrcoef_loss += 0.0001
+            corrcoef_true += 0.0001
+            corrcoef_cust += 100.
         mse_custom += mse_loss.item()
         mae_custom += mae_loss.item()
         grad_inp += ginp.item()
         grad_lbl += glbl.item()
         grad_out += gout.item()
+        mae_grad += mae_shrp.item()
         mse_extr_loss += mse_extr_outp.item()
         mse_extr_true += mse_extr_cesm.item()
         
@@ -410,19 +450,118 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     grad_inp_cust = grad_inp / len(dataloader)
     grad_lbl_cust = grad_lbl / len(dataloader)
     grad_out_cust = grad_out / len(dataloader)
+    mae_gradient = mae_grad / len(dataloader)
     mse_ex_loss = mse_extr_loss / len(dataloader)
     mse_ex_true = mse_extr_true / len(dataloader)
     
     # place stuff in dictionary
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
     second_metrics_dict = {k: np.mean(v) for k, v in second_metrics_dict.items()}
-    
-    # flops = FlopCountAnalysis(model, img_noisy)
-    # flop_count = flops.total()
 
     return (val_loss, coef_loss, coef_true, coef_cust, mse_cust, mae_cust,
-            grad_inp_cust, grad_lbl_cust, grad_out_cust, # flop_count, 
+            grad_inp_cust, grad_lbl_cust, grad_out_cust, mae_gradient,
             mse_ex_loss, mse_ex_true, metrics_dict, second_metrics_dict)
+
+
+@torch.no_grad()
+def gen_images_only(model, dataloader, nc, epoch, trial_num, save_loc, var, data_split="valid"):
+    """
+    Images function.
+
+    Args:
+        model: pytorch neural network
+        dataloader: pytorch dataloader
+        nc: number of channels
+        epoch: current epoch number
+        trial_num: number of trial in optuna study
+        save_loc: location to save figures
+        var: variable string
+        data_split: validation or test data, for figure saving; defaults to valid
+    """
+    # set model to eval mode
+    model.eval()
+    
+    # loop thru data in loader
+    for i, data in enumerate(dataloader):
+        
+        # load input features
+        img_noisy = data["input"].squeeze(dim=2)
+        img_noisy = img_noisy.to(device, dtype=torch.float)
+        
+        # load labels
+        img_label = data["label"].squeeze(dim=2)
+        img_label = img_label.to(device, dtype=torch.float)
+        
+        outputs = model(img_noisy) # predict the model output
+                
+        # save figs for later reference
+        # selecting random sample in batch to visualize
+        a_inp = img_noisy.cpu().detach().numpy()[:,nc-1,:,:]
+        samp_ = np.random.choice(np.arange(0,int(a_inp.shape[0]),1))
+
+        # change plt logging level otherwise get a lot of debug output
+        plt.set_loglevel(level='warning')
+
+        # input
+        im = plt.imshow(a_inp[samp_])
+        plt.colorbar(im)
+        plt.savefig(
+            f"{save_loc}/trial{str(trial_num)}/{data_split}_inp_{str(epoch)}_{str(trial_num)}.png", 
+            bbox_inches='tight')
+        plt.close()
+
+        # output
+        b_out = outputs.cpu().detach().numpy()[:,0,:,:][samp_]
+        im = plt.imshow(b_out)
+        plt.colorbar(im)
+        plt.savefig(
+            f"{save_loc}/trial{str(trial_num)}/{data_split}_out_{str(epoch)}_{str(trial_num)}.png", 
+            bbox_inches='tight')
+        plt.close()
+
+        # label
+        c_lbl = img_label.cpu().detach().numpy()[:,0,:,:][samp_]
+        im = plt.imshow(c_lbl)
+        plt.colorbar(im)
+        plt.savefig(
+            f"{save_loc}/trial{str(trial_num)}/{data_split}_lbl_{str(epoch)}_{str(trial_num)}.png", 
+            bbox_inches='tight')
+        plt.close()
+
+        # save figs for later reference
+        # input data
+        a_inp = img_noisy.cpu().detach().numpy()[:,nc-1,:,:].ravel()
+        # output data
+        b_out = outputs.cpu().detach().numpy()[:,0,:,:].ravel()
+        # label
+        c_lbl = img_label.cpu().detach().numpy()[:,0,:,:].ravel()
+
+        # change plt logging level otherwise get a lot of debug output
+        plt.set_loglevel(level='warning')
+
+        # cesm vs era5
+        im = plt.scatter(a_inp, c_lbl, s=5, color='k')
+        plt.ylabel('ERA5')
+        plt.xlabel('CESM')
+                
+        plt.savefig(
+            f"{save_loc}/trial{str(trial_num)}/scatter_{data_split}_inp_{str(epoch)}_{str(trial_num)}.png", 
+            bbox_inches='tight')
+        plt.close()
+                
+        # ML vs era5
+        im = plt.scatter(b_out, c_lbl, s=5, color='k')
+        plt.ylabel('ERA5')
+        plt.xlabel('ML')
+                
+        plt.savefig(
+            f"{save_loc}/trial{str(trial_num)}/scatter_{data_split}_out_{str(epoch)}_{str(trial_num)}.png", 
+            bbox_inches='tight')
+        plt.close()
+        
+        break # just one set of images needed
+        
+    return
 
 
 def trainer(conf, trial=False, verbose=True):
@@ -439,8 +578,11 @@ def trainer(conf, trial=False, verbose=True):
 
     lr_patience = conf["trainer"]["lr_patience"]
     stopping_patience = conf["trainer"]["stopping_patience"]
-    nc = conf["model"]["in_channels"]
     metric = conf["trainer"]["metric"]
+    
+    nc = conf["model"]["in_channels"]
+    feattopo = conf["data"]["feat_topo"]
+    featcoord = conf["data"]["feat_coord"]
     
     callback_metric = conf["callback_metric"]
     callback_direction = conf["callback_direction"]
@@ -459,6 +601,9 @@ def trainer(conf, trial=False, verbose=True):
         img_iters = conf["img_iter"]
     if not gen_img:
         img_iters = None
+    
+    last_images = conf["only_last_img"]
+    save_models = conf["save_models"]
 
     # Data
     var = conf["data"]["var"]
@@ -482,8 +627,8 @@ def trainer(conf, trial=False, verbose=True):
     )
 
     # Loss
-    train_loss = load_loss(conf["trainer"]["loss"]).to(device)
-    valid_loss = load_loss(conf["trainer"]["loss"]).to(device)
+    train_loss = load_loss(conf["trainer"]["training_loss"]).to(device)
+    valid_loss = load_loss(conf["trainer"]["training_loss"]).to(device)
 
     # Metrics
     validation_metrics = {
@@ -501,31 +646,12 @@ def trainer(conf, trial=False, verbose=True):
         "cesm_ssim": SSIMLoss(n_channels=1).to(device).eval(),
     }
     
-    if conf["optimizer"]["lr_scheduler"] == "Cosine":
-
-        lr_scheduler = CosineAnnealingWarmupRestarts(
-            optimizer,
-            first_cycle_steps=train.__len__(),
-            cycle_mult=1.0,
-            max_lr=conf["optimizer"]["learning_rate"],
-            min_lr=1e-3 * conf["optimizer"]["learning_rate"],
-            warmup_steps=50,
-            gamma=0.8,
-        )
-        
-    if conf["optimizer"]["lr_scheduler"] == "ReduceOnPlateau":
-        
-        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, patience=lr_patience, verbose=verbose, min_lr=1.0e-13
-        )
-    
     # dictionary to store final metrics
     results_dict = defaultdict(list)
     
     # folder to save trial images
     trial_number = "" if not trial else int(trial.number)
-    if gen_img:
-        os.makedirs(save_loc+"/trial"+str(trial_number), exist_ok=True)
+    os.makedirs(save_loc+"/trial"+str(trial_number), exist_ok=True)
     
     # train and validate
     for epoch in list(range(epochs)):
@@ -551,13 +677,34 @@ def trainer(conf, trial=False, verbose=True):
                 lon0=lon0,
                 lat0=lat0,
                 dxdy=dxdy,
-                feat_topo=True,
-                feat_lats=True,
-                feat_lons=True,
+                feat_topo=feattopo,
+                feat_lats=featcoord,
+                feat_lons=featcoord,
                 startdt="1999-02-01",
                 enddt="2014-12-31",
                 homedir=homedir,
             )
+
+            # set lr_scheduler
+            if epoch == 0:
+
+                if conf["optimizer"]["lr_scheduler"] == "Cosine":
+
+                    lr_scheduler = CosineAnnealingWarmupRestarts(
+                        optimizer,
+                        first_cycle_steps=train.__len__(),
+                        cycle_mult=1.0,
+                        max_lr=conf["optimizer"]["learning_rate"],
+                        min_lr=1e-3 * conf["optimizer"]["learning_rate"],
+                        warmup_steps=50,
+                        gamma=0.8,
+                    )
+
+                if conf["optimizer"]["lr_scheduler"] == "ReduceOnPlateau":
+
+                    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                        optimizer, patience=lr_patience, verbose=verbose, min_lr=1.0e-13
+                    )
 
             if not norm or norm == "None":
                 
@@ -619,9 +766,9 @@ def trainer(conf, trial=False, verbose=True):
                 lon0=lon0,
                 lat0=lat0,
                 dxdy=dxdy,
-                feat_topo=True,
-                feat_lats=True,
-                feat_lons=True,
+                feat_topo=feattopo,
+                feat_lats=featcoord,
+                feat_lons=featcoord,
                 startdt="2015-01-01",
                 enddt="2017-12-31",
                 homedir=homedir,
@@ -645,9 +792,9 @@ def trainer(conf, trial=False, verbose=True):
                 lon0=lon0,
                 lat0=lat0,
                 dxdy=dxdy,
-                feat_topo=True,
-                feat_lats=True,
-                feat_lons=True,
+                feat_topo=feattopo,
+                feat_lats=featcoord,
+                feat_lons=featcoord,
                 startdt="2018-01-01",
                 enddt="2020-12-31",
                 homedir=homedir,
@@ -664,16 +811,17 @@ def trainer(conf, trial=False, verbose=True):
             )
         
         # train
-        tloss, tcorr, ttrue, tcust, tmsecust, tmaecust, tginp, tglbl, tgout = train_one_epoch(
-            model, train_loader, optimizer, train_loss, nc, lr_schedule_name=conf["optimizer"]["lr_scheduler"], lr_scheduler=lr_scheduler
+        tloss, tcorr, ttrue, tcust, tmsecust, tmaecust, tginp, tglbl, tgout, tgmae = train_one_epoch(
+            model, train_loader, optimizer, train_loss, nc, 
+            lr_schedule_name=conf["optimizer"]["lr_scheduler"], lr_scheduler=lr_scheduler
         )
         # validate
-        vloss, vcorr, vtrue, vcust, vmsecust, vmaecust, vginp, vglbl, vgout, vmse_x, vmse_x_, metrics, cesm_metrics = validate(
+        vloss, vcorr, vtrue, vcust, vmsecust, vmaecust, vginp, vglbl, vgout, vgmae, vmse_x, vmse_x_, metrics, cesm_metrics = validate(
             model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
             nc, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="valid"
         )
         # test
-        eloss, ecorr, etrue, ecust, emsecust, emaecust, eginp, eglbl, egout, emse_x, emse_x_, emetrics, cesm_emetrics = validate(
+        eloss, ecorr, etrue, ecust, emsecust, emaecust, eginp, eglbl, egout, egmae, emse_x, emse_x_, emetrics, cesm_emetrics = validate(
             model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
             nc, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="eval"
         )
@@ -688,12 +836,13 @@ def trainer(conf, trial=False, verbose=True):
         results_dict["train_loss"].append(tloss) # loss from echo/optuna
         results_dict["train_corr"].append(tcorr) # correlation (ML/era5)
         results_dict["tcesm_corr"].append(ttrue) # correlation (cesm/era5)
-        results_dict["tcorr_cust"].append(tcust) # correlation (ML/era5//cesm/era5)
+        results_dict["tcorr_cust"].append(tcust) # correlation (cesm/era5//ML/era5)
         results_dict["tmse_cust"].append(tmsecust) # mse (ML/era5//cesm/era5)
         results_dict["tmae_cust"].append(tmaecust) # mae (ML/era5//cesm/era5)
         results_dict["tgrad_inp"].append(tginp) # horizontal gradient (cesm)
         results_dict["tgrad_lbl"].append(tglbl) # horizontal gradient (era5)
         results_dict["tgrad_out"].append(tgout) # horizontal gradient (ML)
+        results_dict["tgrad_mae"].append(tgmae) # horizontal gradient mae 
         
         # validation set
         results_dict["valid_loss"].append(vloss) # loss from echo/optuna
@@ -705,7 +854,7 @@ def trainer(conf, trial=False, verbose=True):
         results_dict["vgrad_inp"].append(vginp) # horizontal gradient (cesm)
         results_dict["vgrad_lbl"].append(vglbl) # horizontal gradient (era5)
         results_dict["vgrad_out"].append(vgout) # horizontal gradient (ML)
-        # results_dict["vflop"].append(vflop) # flops (floating point operations per second)
+        results_dict["vgrad_mae"].append(vgmae) # horizontal gradient mae 
         results_dict["vmse_extreme_outp"].append(vmse_x) # mse for extremes (ML vs era5)
         results_dict["vmse_extreme_cesm"].append(vmse_x_) # mse for extremes (cesm vs era5)
         
@@ -725,7 +874,7 @@ def trainer(conf, trial=False, verbose=True):
         results_dict["egrad_inp"].append(eginp) # horizontal gradient (cesm)
         results_dict["egrad_lbl"].append(eglbl) # horizontal gradient (era5)
         results_dict["egrad_out"].append(egout) # horizontal gradient (ML)
-        # results_dict["eflop"].append(eflop) # flops (floating point operations per second)
+        results_dict["egrad_mae"].append(egmae) # horizontal gradient mae
         results_dict["emse_extreme_outp"].append(emse_x) # mse for extremes (ML vs era5)
         results_dict["emse_extreme_cesm"].append(emse_x_) # mse for extremes (cesm vs era5)
         
@@ -768,18 +917,21 @@ def trainer(conf, trial=False, verbose=True):
         # Stop training if we have not improved after X epochs based on metric
         if offset >= stopping_patience:
             
-            # save model (pausing this due to memory)
-            #state_dict = {
-            #    "epoch": epoch,
-            #    "best_epoch": best_epoch,
-            #    "stopping_patience": stopping_patience,
-            #    "model_state_dict": model.state_dict(),
-            #    "optimizer_state_dict": optimizer.state_dict(),
-            #    "loss": conf["trainer"]["loss"],
-            #    "callback_metric": saving_metric_option,
-            #}
-            #torch.save(state_dict, 
-            #           f"{save_loc}/trial{str(trial_number)}/model_{str(trial_number)}.pt")
+            # save model
+            if save_models:
+                
+                state_dict = {
+                    "epoch": epoch,
+                    "best_epoch": best_epoch,
+                    "stopping_patience": stopping_patience,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "training_loss": conf["trainer"]["training_loss"],
+                    "callback_metric": saving_metric_option,
+                }
+                
+                torch.save(state_dict, 
+                           f"{save_loc}/trial{str(trial_number)}/model_{str(trial_number)}.pt")
             
             break
     
@@ -788,7 +940,11 @@ def trainer(conf, trial=False, verbose=True):
     
     # return the results from the respective dictionary
     results = {k: v[best_epoch] for k, v in results_dict.items()}
-
+    
+    if last_images:
+        gen_images_only(model, valid_loader, nc, epoch, trial_number, save_loc, var, data_split="valid")
+        gen_images_only(model, tests_loader, nc, epoch, trial_number, save_loc, var, data_split="eval")
+    
     return results
 
 

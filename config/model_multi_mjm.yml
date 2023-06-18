@@ -1,0 +1,56 @@
+seed: 1000
+
+# update # update # update # update # update # update
+save_loc: "/glade/work/molina/studies/t2_fixed3_0_tpcd/echo_stuff/"
+
+# images generated every other img_iter (don't make zero! 'epoch divisible by')
+# e.g., make 1 if image wanted every epoch; 5 if every fifth epoch, etc.
+
+img_gen: False
+scatter_gen: False
+img_iter: 5
+only_last_img: True
+save_models: False
+
+callback_direction: ['min', 'min', 'min']
+callback_metric: ['valid_mae', 'vmse_extreme_outp', 'valid_perc']
+
+data:
+  homedir: '/glade/derecho/scratch/molina/'
+  dxdy: 31 
+  lon0: 250.0
+  lat0: 30
+  norm: "minmax"
+  norm_pixel: True
+  dual_norm: False
+  region: "fixed"
+  
+  # update # update # update # update # update # update
+  var: "tas2m"
+  wks: 3
+  feat_topo: True
+  feat_coord: True
+
+model:
+  name: "unet"
+  classes: 1
+  activation: "sigmoid"
+  
+  # update # update # update # update # update # update
+  in_channels: 4
+
+optimizer:
+  learning_rate: 0.001
+  weight_decay: 0.0
+  lr_scheduler: "ReduceOnPlateau"
+
+trainer:
+  epochs: 100
+  train_batch_size: 32
+  valid_batch_size: 32
+  batches_per_epoch: 100
+  lr_patience: 2
+  stopping_patience: 5
+  training_loss: "smooth"
+  metric: "valid_mae"
+  direction: "minimize"

@@ -17,7 +17,7 @@ class S2SDataset(Dataset):
         norm (str): normalization. Defaults to zscore. Also use None, minmax, or negone.
         norm_pixel (boolean): normalize each grid cell. Defaults to False.
         dual_norm (boolean): normalize the input and labels separately. Defaults to False.
-        region (str): region method used. Defaults 'fixed' uses one region. 'random' is deprecated.
+        region (str): region method used. 'fixed', 'random', or 'quasi'.
         minv (float): minimum value for normalization. Defaults to None.
         maxv (float): maximum value for normalization. Defaults to None.
         mini (float): minimum value for normalization (input, if dual_norm). Defaults to None.
@@ -71,6 +71,10 @@ class S2SDataset(Dataset):
         if self.region_ == 'random':
             self.dxdy=dxdy
             self.lon0, self.lat0=self.rand_coords()
+            
+        if self.region_ == 'quasi':
+            self.dxdy=dxdy
+            self.lon0, self.lat0=self.quasi_coords()
             
         self.feat_topo=feat_topo
         self.feat_lats=feat_lats
@@ -222,6 +226,22 @@ class S2SDataset(Dataset):
 
         ax = np.random.choice(range_x, replace=False)
         by = np.random.choice(range_y, replace=False)
+
+        return ax, by
+    
+    
+    def quasi_coords(self):
+        """
+        Get quasi-random coords.
+        Returns lon0, lat0.
+        """
+        lon_quasi = [190, 230, 262, 280, 280, 112, 110, 125,  0, 60, 0,  10]
+        lat_quasi = [ 45,  25,  24, -23, -55,  22, -12, -44, 35,  5, 0, -35]
+
+        rand_indx = np.random.choice(len(lon_quasi), replace=False)
+
+        ax = lon_quasi[rand_indx]
+        by = lat_quasi[rand_indx]
 
         return ax, by
     
