@@ -20,7 +20,6 @@ import tqdm
 import optuna
 import shutil
 
-import s2sml.torch_funcs as torch_funcs
 import s2sml.torch_s2s_dataset as torch_s2s_dataset
 from s2sml.load_loss import load_loss
 from s2sml.load_model import load_model
@@ -131,9 +130,6 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
     
     # setting the running metrics to zero
     running_loss  = 0.0
-    corrcoef_loss = 0.0
-    corrcoef_true = 0.0
-    corrcoef_cust = 0.0
     
     # mse/mae per batch
     mse_custom = 0.0
@@ -163,8 +159,6 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
         outputs = model(img_noisy) # predict using the ML model
         
         loss = criterion(outputs, img_label) # loss: ML vs labels
-        closs = torch_funcs.corrcoef(outputs, img_label) # corr: ML vs labels
-        tloss = torch_funcs.corrcoef(img_noisy[:,nc-1:nc,:,:], img_label) # corr: input vs labels
         
         # mse/mae per batch
         mse_loss = mse_metric_batch(
@@ -191,14 +185,6 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
         
         # update metrics
         running_loss += loss.item()
-        try:
-            corrcoef_loss += closs.item() # corr: ML vs era5
-            corrcoef_true += tloss.item() # corr: cesm vs era5
-            corrcoef_cust += tloss.item() / closs.item()
-        except TypeError:
-            corrcoef_loss += 0.0001
-            corrcoef_true += 0.0001
-            corrcoef_cust += 100.
         mse_custom += mse_loss.item()
         mae_custom += mae_loss.item()
         grad_inp += ginp.item()
@@ -211,9 +197,6 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
         
     # updates
     train_loss = running_loss / len(dataloader)
-    coef_loss = corrcoef_loss / len(dataloader)
-    coef_true = corrcoef_true / len(dataloader)
-    coef_cust = corrcoef_cust / len(dataloader)
     mse_cust = mse_custom / len(dataloader)
     mae_cust = mae_custom / len(dataloader)
     grad_inp_cust = grad_inp / len(dataloader)
@@ -225,7 +208,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
     torch.cuda.empty_cache()
     gc.collect()
     
-    return (train_loss, coef_loss, coef_true, coef_cust, mse_cust, mae_cust, 
+    return (train_loss, mse_cust, mae_cust, 
             grad_inp_cust, grad_lbl_cust, grad_out_cust, mae_gradient)
 
 
@@ -257,9 +240,6 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     
     # set running metrics to zero
     running_loss = 0.0
-    corrcoef_loss = 0.0
-    corrcoef_true = 0.0
-    corrcoef_cust = 0.0
     
     # grab metrics dictionary
     metrics_dict = defaultdict(list)
@@ -336,8 +316,6 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         
         # compute metrics
         loss = criterion(outputs, img_label) # loss: ML vs era5
-        closs = torch_funcs.corrcoef(outputs, img_label) # corr: ML vs era5
-        tloss = torch_funcs.corrcoef(img_noisy[:,nc-1:nc,:,:], img_label) # corr: cesm vs era5
         
         # if scatter images are to be saved, do this
         if gen_scatter:
@@ -423,14 +401,6 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         
         # update metrics
         running_loss += loss.item()
-        try:
-            corrcoef_loss += closs.item() # corr: ML vs era5
-            corrcoef_true += tloss.item() # corr: cesm vs era5
-            corrcoef_cust += tloss.item() / closs.item()
-        except TypeError:
-            corrcoef_loss += 0.0001
-            corrcoef_true += 0.0001
-            corrcoef_cust += 100.
         mse_custom += mse_loss.item()
         mae_custom += mae_loss.item()
         grad_inp += ginp.item()
@@ -442,9 +412,6 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         
     # update running metrics
     val_loss = running_loss / len(dataloader)
-    coef_loss = corrcoef_loss / len(dataloader)
-    coef_true = corrcoef_true / len(dataloader)
-    coef_cust = corrcoef_cust / len(dataloader)
     mse_cust = mse_custom / len(dataloader)
     mae_cust = mae_custom / len(dataloader)
     grad_inp_cust = grad_inp / len(dataloader)
@@ -458,7 +425,7 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
     second_metrics_dict = {k: np.mean(v) for k, v in second_metrics_dict.items()}
 
-    return (val_loss, coef_loss, coef_true, coef_cust, mse_cust, mae_cust,
+    return (val_loss, mse_cust, mae_cust,
             grad_inp_cust, grad_lbl_cust, grad_out_cust, mae_gradient,
             mse_ex_loss, mse_ex_true, metrics_dict, second_metrics_dict)
 
@@ -811,17 +778,17 @@ def trainer(conf, trial=False, verbose=True):
             )
         
         # train
-        tloss, tcorr, ttrue, tcust, tmsecust, tmaecust, tginp, tglbl, tgout, tgmae = train_one_epoch(
+        tloss, tmsecust, tmaecust, tginp, tglbl, tgout, tgmae = train_one_epoch(
             model, train_loader, optimizer, train_loss, nc, 
             lr_schedule_name=conf["optimizer"]["lr_scheduler"], lr_scheduler=lr_scheduler
         )
         # validate
-        vloss, vcorr, vtrue, vcust, vmsecust, vmaecust, vginp, vglbl, vgout, vgmae, vmse_x, vmse_x_, metrics, cesm_metrics = validate(
+        vloss, vmsecust, vmaecust, vginp, vglbl, vgout, vgmae, vmse_x, vmse_x_, metrics, cesm_metrics = validate(
             model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
             nc, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="valid"
         )
         # test
-        eloss, ecorr, etrue, ecust, emsecust, emaecust, eginp, eglbl, egout, egmae, emse_x, emse_x_, emetrics, cesm_emetrics = validate(
+        eloss, emsecust, emaecust, eginp, eglbl, egout, egmae, emse_x, emse_x_, emetrics, cesm_emetrics = validate(
             model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
             nc, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="eval"
         )
@@ -834,9 +801,6 @@ def trainer(conf, trial=False, verbose=True):
         
         # training set
         results_dict["train_loss"].append(tloss) # loss from echo/optuna
-        results_dict["train_corr"].append(tcorr) # correlation (ML/era5)
-        results_dict["tcesm_corr"].append(ttrue) # correlation (cesm/era5)
-        results_dict["tcorr_cust"].append(tcust) # correlation (cesm/era5//ML/era5)
         results_dict["tmse_cust"].append(tmsecust) # mse (ML/era5//cesm/era5)
         results_dict["tmae_cust"].append(tmaecust) # mae (ML/era5//cesm/era5)
         results_dict["tgrad_inp"].append(tginp) # horizontal gradient (cesm)
@@ -846,9 +810,6 @@ def trainer(conf, trial=False, verbose=True):
         
         # validation set
         results_dict["valid_loss"].append(vloss) # loss from echo/optuna
-        results_dict["valid_corr"].append(vcorr) # correlation (ML/era5)
-        results_dict["vcesm_corr"].append(vtrue) # correlation (cesm/era5)
-        results_dict["vcorr_cust"].append(vcust) # correlation (ML/era5//cesm/era5)
         results_dict["vmse_cust"].append(vmsecust) # mse (ML/era5//cesm/era5)
         results_dict["vmae_cust"].append(vmaecust) # mae (ML/era5//cesm/era5)
         results_dict["vgrad_inp"].append(vginp) # horizontal gradient (cesm)
@@ -866,9 +827,6 @@ def trainer(conf, trial=False, verbose=True):
         
         # evaluation set
         results_dict["evals_loss"].append(eloss) # loss from echo/optuna
-        results_dict["evals_corr"].append(ecorr) # correlation (ML/era5)
-        results_dict["ecesm_corr"].append(etrue) # correlation (cesm/era5)
-        results_dict["ecorr_cust"].append(ecust) # correlation (ML/era5//cesm/era5)
         results_dict["emse_cust"].append(emsecust) # mse (ML/era5//cesm/era5)
         results_dict["emae_cust"].append(emaecust) # mae (ML/era5//cesm/era5)
         results_dict["egrad_inp"].append(eginp) # horizontal gradient (cesm)
