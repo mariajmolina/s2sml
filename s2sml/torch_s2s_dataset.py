@@ -256,11 +256,6 @@ class S2SDataset(Dataset):
         
         if inpvar:
             
-            # need to convert precip cesm file
-            if self.variable_ == 'prsfc':
-                
-                data = data * 84600 # convert kg/m2/s to mm/day
-            
             return (data - self.mean_inp) / self.std_inp
 
 
@@ -274,11 +269,6 @@ class S2SDataset(Dataset):
         
         if inpvar:
             
-            # need to convert precip cesm file
-            if self.variable_ == 'prsfc':
-                
-                data = data * 84600 # convert kg/m2/s to mm/day
-            
             return (data - self.min_inp) / (self.max_inp - self.min_inp)
     
     
@@ -291,11 +281,6 @@ class S2SDataset(Dataset):
             return (2 * (data - self.min_val) / (self.max_val - self.min_val)) - 1
         
         if inpvar:
-            
-            # need to convert precip cesm file
-            if self.variable_ == 'prsfc':
-                
-                data = data * 84600 # convert kg/m2/s to mm/day
             
             return (2 * (data - self.min_inp) / (self.max_inp - self.min_inp)) - 1
     
