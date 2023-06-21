@@ -3,7 +3,9 @@ applications/__pycache__/
 applications/.ipynb_checkpoints/
 s2sml.egg-info/
 s2sml/.ipynb_checkpoints/
+s2sml/__pycache__/
 results_casper/*/err
 results_casper/*/best.pt
 results_gust/*/err
 results_gust/*/echo_opt/
+results_*/echo_opt/
