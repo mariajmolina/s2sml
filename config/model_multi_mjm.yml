@@ -1,7 +1,7 @@
 seed: 1000
 
 # update # update # update # update # update # update
-save_loc: "/glade/work/molina/studies/t2_fixed3_0_tpcd/echo_stuff/"
+save_loc: "/glade/work/molina/studies/t2_global3_tpcd/echo_stuff/"
 
 # images generated every other img_iter (don't make zero! 'epoch divisible by')
 # e.g., make 1 if image wanted every epoch; 5 if every fifth epoch, etc.
@@ -13,15 +13,15 @@ only_last_img: True
 save_models: False
 
 callback_direction: ['min', 'min', 'min']
-callback_metric: ['valid_mae', 'vmse_extreme_outp', 'valid_perc']
+callback_metric: ['vmae_cust', 'vmse_extreme_outp', 'vgrad_mae']
 
 data:
   homedir: '/glade/derecho/scratch/molina/'
-  dxdy: 31 
-  lon0: 250.0
-  lat0: 30
+  dxdy: 351
+  lon0: 0.0
+  lat0: -69.0
   norm: "minmax"
-  norm_pixel: True
+  norm_pixel: False
   dual_norm: False
   region: "fixed"
   
