@@ -9,3 +9,4 @@ results_casper/*/best.pt
 results_gust/*/err
 results_gust/*/echo_opt/
 results_*/echo_opt/
+pd_test/
