@@ -17,7 +17,7 @@ class S2SDataset(Dataset):
         norm (str): normalization. Defaults to zscore. Also use None, minmax, or negone.
         norm_pixel (boolean): normalize each grid cell. Defaults to False.
         dual_norm (boolean): normalize the input and labels separately. Defaults to False.
-        region (str): region method used. 'fixed', 'random', or 'quasi'.
+        region (str): region method used. 'fixed', 'random', 'quasi', 'global'.
         minv (float): minimum value for normalization. Defaults to None.
         maxv (float): maximum value for normalization. Defaults to None.
         mini (float): minimum value for normalization (input, if dual_norm). Defaults to None.
@@ -75,6 +75,10 @@ class S2SDataset(Dataset):
         if self.region_ == 'quasi':
             self.dxdy=dxdy
             self.lon0, self.lat0=self.quasi_coords()
+            
+        if self.region_ == 'global':
+            self.dxdy=360
+            self.lon0, self.lat0=0.0, -90.0
             
         self.feat_topo=feat_topo
         self.feat_lats=feat_lats
@@ -184,6 +188,10 @@ class S2SDataset(Dataset):
             img = xr.concat([self.coord_data['cesm']],dim='feature')
         
         lbl = xr.concat([self.coord_data['era5']],dim='feature') # label
+        
+        if self.region_ == 'global':
+            img = img.pad(pad_width={'x':[12,12],'y':[6,5]}, constant_values=0.0)
+            lbl = lbl.pad(pad_width={'x':[12,12],'y':[6,5]}, constant_values=0.0)
             
         return {'input': img.transpose('feature','sample','x','y').values, 
                 'label': lbl.transpose('feature','sample','x','y').values}
