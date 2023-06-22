@@ -4,7 +4,6 @@ import pandas as pd
 import xarray as xr
 import torch
 from torch.utils.data import Dataset
-import torchvision.transforms as T
 
 
 class S2SDataset(Dataset):
