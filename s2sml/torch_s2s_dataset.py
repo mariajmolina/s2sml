@@ -188,13 +188,16 @@ class S2SDataset(Dataset):
             img = xr.concat([self.coord_data['cesm']],dim='feature')
         
         lbl = xr.concat([self.coord_data['era5']],dim='feature') # label
+        lsm = self.lmask # lsm
         
         if self.region_ == 'global':
             img = img.pad(pad_width={'x':[12,12],'y':[6,5]}, constant_values=0.0)
             lbl = lbl.pad(pad_width={'x':[12,12],'y':[6,5]}, constant_values=0.0)
+            lsm = lsm.pad(pad_width={'x':[12,12],'y':[6,5]}, constant_values=0.0)
             
         return {'input': img.transpose('feature','sample','x','y').values, 
-                'label': lbl.transpose('feature','sample','x','y').values}
+                'label': lbl.transpose('feature','sample','x','y').values,
+                'lmask': lsm.transpose('sample','x','y').values}
     
     
     def leadtime_help(self):
@@ -564,6 +567,10 @@ class S2SDataset(Dataset):
         # coordinates (terrain and lat/lon features)
         tmpcd = xr.open_dataset(self.homedir+'/ml_coordsv2.nc').expand_dims('sample')
         self.coord_data = self.box_cutter(tmpcd)
+        
+        # coordinates (terrain and lat/lon features)
+        lmask = xr.open_dataset(self.homedir+'/era5_lsmask.nc').expand_dims('sample')
+        self.lmask = self.box_cutter(lmask)['lsm']
         
         # open files using lists and indices
         imgtr = xr.open_mfdataset(self.list_of_cesm[indx], concat_dim='sample', combine='nested')[var]
