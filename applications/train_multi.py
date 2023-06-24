@@ -6,6 +6,7 @@ import traceback
 import random
 import numpy as np
 import pandas as pd
+import xarray as xr
 import matplotlib.pyplot as plt
 from skimage import filters
 
@@ -16,7 +17,6 @@ import lpips
 from echo.src.base_objective import BaseObjective
 from collections import defaultdict
 
-import tqdm
 import optuna
 import shutil
 
@@ -29,9 +29,24 @@ from s2sml.scheduler import CosineAnnealingWarmupRestarts
 import gc
 from piqa import SSIM
 
-#print('loading cuda')
-is_cuda = torch.cuda.is_available()
-device = torch.device(torch.cuda.current_device()) if is_cuda else torch.device("cpu")
+
+def device_assignment_using_trials(trl_number):
+    """
+    Assign the device to use based on trial number
+    """
+    is_cuda = torch.cuda.is_available()
+    if is_cuda:
+        if np.isin(trl_number, np.arange(0,2000,4)):
+            device = torch.device("cuda:"+str(0))
+        elif np.isin(trl_number, np.arange(1,2000,4)):
+            device = torch.device("cuda:"+str(1))
+        elif np.isin(trl_number, np.arange(2,2000,4)):
+            device = torch.device("cuda:"+str(2))
+        else:
+            device = torch.device("cuda:"+str(3))
+    else:
+        device = torch.device("cpu")
+    return device
 
 
 def seed_everything(seed=1234):
@@ -93,6 +108,59 @@ def grab_extremes(lbl_, other, var_):
     return oth_ext, lbl_ext
 
 
+def mae_land_batch(inp, obs, mask, csm=False):
+    """
+    Mean absolute error for masked data.
+    
+    Args:
+        inp: input data
+        obs: label data
+        mask: mask
+        csm: cesm data
+    """
+    if not np.any(csm):
+    
+        masked_inp = inp[xr.where(mask==1, True, False)]
+        masked_obs = obs[xr.where(mask==1, True, False)]
+
+        return np.mean(np.abs(masked_inp - masked_obs))
+    
+    if np.any(csm):
+        
+        masked_inp = inp[xr.where(mask==1, True, False)]
+        masked_csm = csm[xr.where(mask==1, True, False)]
+        masked_obs = obs[xr.where(mask==1, True, False)]
+        
+        return np.mean(np.abs(masked_inp - masked_obs)) / np.mean(
+                       np.abs(masked_csm - masked_obs))
+
+    
+def mse_land_batch(inp, obs, mask, csm=False):
+    """
+    Mean absolute error for masked data.
+    
+    Args:
+        inp: input data
+        obs: label data
+        mask: mask
+        csm: cesm data
+    """
+    if not np.any(csm):
+    
+        masked_inp = inp[xr.where(mask==1, True, False)]
+        masked_obs = obs[xr.where(mask==1, True, False)]
+
+        return ((masked_inp - masked_obs)**2).mean()
+    
+    if np.any(csm):
+        
+        masked_inp = inp[xr.where(mask==1, True, False)]
+        masked_csm = csm[xr.where(mask==1, True, False)]
+        masked_obs = obs[xr.where(mask==1, True, False)]
+        
+        return ((masked_inp - masked_obs)**2).mean() / ((masked_csm - masked_obs)**2).mean()
+    
+
 class SSIMLoss(SSIM):
     """
     Structural Similarity Index
@@ -112,7 +180,7 @@ def reverse_negone(ds, minv, maxv):
     return (((ds + 1) / 2) * (maxv - minv)) + minv
 
 
-def train_one_epoch(model, dataloader, optimizer, criterion, nc, 
+def train_one_epoch(model, dataloader, optimizer, criterion, nc, device,
                     clip=1.0, lr_schedule_name=False, lr_scheduler=False):
     """
     Training function.
@@ -214,7 +282,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
 
 @torch.no_grad()
 def validate(model, dataloader, criterion, metrics, second_metrics, 
-             nc, epoch, trial_num, gen_img, gen_scatter, 
+             nc, device, epoch, trial_num, gen_img, gen_scatter, 
              img_iters, save_loc, var, data_split="valid"):
     """
     Validation function.
@@ -260,6 +328,12 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     # extremes mse
     mse_extr_loss = 0.0 # ml vs era5
     mse_extr_true = 0.0 # cesm vs era5
+    
+    # land only
+    land_mae = 0.0
+    land_mae_cust = 0.0
+    land_mse = 0.0
+    land_mse_cust = 0.0
     
     # loop thru data in loader
     for i, data in enumerate(dataloader):
@@ -355,10 +429,8 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
                 plt.close()
         
         # mse/mae per batch
-        mse_loss = mse_metric_batch(
-            outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
-        mae_loss = mae_metric_batch(
-            outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        mse_loss = mse_metric_batch(outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        mae_loss = mae_metric_batch(outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
         
         # sharpness
         ginp, glbl, gout = avg_grad(img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
@@ -375,9 +447,37 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         # mse for extreme cases in batch (ml output)
         out_tmp, lbl_tmp = grab_extremes(img_label, outputs, var)
         mse_extr_outp = mse_metric_batch(out_tmp, lbl_tmp)
+        
         # cesm fields
         img_tmp, lbl_tmp = grab_extremes(img_label, img_noisy[:,nc-1:nc,:,:], var)
         mse_extr_cesm = mse_metric_batch(img_tmp, lbl_tmp)
+        
+        # mae and mse for land only
+        landmae = mae_land_batch(
+            inp=outputs.cpu().detach().numpy().astype(float),
+            obs=img_label.cpu().detach().numpy().astype(float),
+            mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
+        )
+        
+        landmae_cust = mae_land_batch(
+            inp=outputs.cpu().detach().numpy().astype(float),
+            obs=img_label.cpu().detach().numpy().astype(float),
+            mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
+            csm=img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+        )
+        
+        landmse = mse_land_batch(
+            inp=outputs.cpu().detach().numpy().astype(float),
+            obs=img_label.cpu().detach().numpy().astype(float),
+            mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
+        )
+        
+        landmse_cust = mse_land_batch(
+            inp=outputs.cpu().detach().numpy().astype(float),
+            obs=img_label.cpu().detach().numpy().astype(float),
+            mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
+            csm=img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+        )
 
         # ml model output eval 
         for k, v in metrics.items():
@@ -409,6 +509,10 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         mae_grad += mae_shrp.item()
         mse_extr_loss += mse_extr_outp.item()
         mse_extr_true += mse_extr_cesm.item()
+        land_mae += landmae.item()
+        land_mae_cust += landmae_cust.item()
+        land_mse += landmse.item()
+        land_mse_cust += landmse_cust.item()
         
     # update running metrics
     val_loss = running_loss / len(dataloader)
@@ -420,6 +524,10 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     mae_gradient = mae_grad / len(dataloader)
     mse_ex_loss = mse_extr_loss / len(dataloader)
     mse_ex_true = mse_extr_true / len(dataloader)
+    lnd_mae = land_mae / len(dataloader)
+    lnd_mae_cust = land_mae_cust / len(dataloader)
+    lnd_mse = land_mse / len(dataloader)
+    lnd_mse_cust = land_mse_cust / len(dataloader)
     
     # place stuff in dictionary
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
@@ -427,11 +535,12 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
 
     return (val_loss, mse_cust, mae_cust,
             grad_inp_cust, grad_lbl_cust, grad_out_cust, mae_gradient,
-            mse_ex_loss, mse_ex_true, metrics_dict, second_metrics_dict)
+            mse_ex_loss, mse_ex_true, lnd_mae, lnd_mae_cust, lnd_mse, lnd_mse_cust,
+            metrics_dict, second_metrics_dict)
 
 
 @torch.no_grad()
-def gen_images_only(model, dataloader, nc, epoch, trial_num, save_loc, var, data_split="valid"):
+def gen_images_only(model, dataloader, nc, device, epoch, trial_num, save_loc, var, data_split="valid"):
     """
     Images function.
 
@@ -545,14 +654,12 @@ def trainer(conf, trial=False, verbose=True):
 
     lr_patience = conf["trainer"]["lr_patience"]
     stopping_patience = conf["trainer"]["stopping_patience"]
-    metric = conf["trainer"]["metric"]
+    callback_metric = conf["trainer"]["metric"]
+    callback_direction = conf["trainer"]["direction"]
     
     nc = conf["model"]["in_channels"]
     feattopo = conf["data"]["feat_topo"]
     featcoord = conf["data"]["feat_coord"]
-    
-    callback_metric = conf["callback_metric"]
-    callback_direction = conf["callback_direction"]
     
     save_loc = conf["save_loc"]
     os.makedirs(save_loc, exist_ok=True)
@@ -582,6 +689,13 @@ def trainer(conf, trial=False, verbose=True):
     norm_pixel = conf["data"]["norm_pixel"]
     dual_norm = conf["data"]["dual_norm"]
     region = conf["data"]["region"]
+    
+    # folder to save trial images
+    trial_number = "" if not trial else int(trial.number)
+    os.makedirs(save_loc+"/trial"+str(trial_number), exist_ok=True)
+    
+    # assign device
+    device = device_assignment_using_trials(trial_number)
     
     # Load model
     model = load_model(conf["model"]).to(device)
@@ -616,15 +730,12 @@ def trainer(conf, trial=False, verbose=True):
     # dictionary to store final metrics
     results_dict = defaultdict(list)
     
-    # folder to save trial images
-    trial_number = "" if not trial else int(trial.number)
-    os.makedirs(save_loc+"/trial"+str(trial_number), exist_ok=True)
-    
     # train and validate
     for epoch in list(range(epochs)):
         
         # create train/test data each epoch if random regions used, otherwise, just once for fixed region
-        if (epoch == 0 and region == "fixed") or (region == "random") or (region == "quasi"):
+        if (epoch == 0 and region == "fixed") or (region == "random") or (region == "quasi") or (
+            epoch == 0 and region == "global"):
         
             train = torch_s2s_dataset.S2SDataset(
                 week=wks,
@@ -779,18 +890,18 @@ def trainer(conf, trial=False, verbose=True):
         
         # train
         tloss, tmsecust, tmaecust, tginp, tglbl, tgout, tgmae = train_one_epoch(
-            model, train_loader, optimizer, train_loss, nc, 
+            model, train_loader, optimizer, train_loss, nc, device,
             lr_schedule_name=conf["optimizer"]["lr_scheduler"], lr_scheduler=lr_scheduler
         )
         # validate
-        vloss, vmsecust, vmaecust, vginp, vglbl, vgout, vgmae, vmse_x, vmse_x_, metrics, cesm_metrics = validate(
+        vloss, vmsecust, vmaecust, vginp, vglbl, vgout, vgmae, vmse_x, vmse_x_, vlnd_mae, vlnd_maec, vlnd_mse, vlnd_msec, metrics, cesm_metrics = validate(
             model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="valid"
+            nc, device, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="valid"
         )
         # test
-        eloss, emsecust, emaecust, eginp, eglbl, egout, egmae, emse_x, emse_x_, emetrics, cesm_emetrics = validate(
+        eloss, emsecust, emaecust, eginp, eglbl, egout, egmae, emse_x, emse_x_, elnd_mae, elnd_maec, elnd_mse, elnd_msec, emetrics, cesm_emetrics = validate(
             model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="eval"
+            nc, device, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="eval"
         )
         
         assert np.isfinite(vloss), "Something is wrong, the validation loss is NaN"
@@ -818,6 +929,10 @@ def trainer(conf, trial=False, verbose=True):
         results_dict["vgrad_mae"].append(vgmae) # horizontal gradient mae 
         results_dict["vmse_extreme_outp"].append(vmse_x) # mse for extremes (ML vs era5)
         results_dict["vmse_extreme_cesm"].append(vmse_x_) # mse for extremes (cesm vs era5)
+        results_dict["vland_mae"].append(vlnd_mae) # mae over land only
+        results_dict["vland_mae_cust"].append(vlnd_maec) # mae over land only (ratio with cesm)
+        results_dict["vland_mse"].append(vlnd_mse) # mse over land only
+        results_dict["vland_mse_cust"].append(vlnd_msec) # mse over land only (ratio with cesm)
         
         # other metrics (validation set)
         for k, v in metrics.items():
@@ -835,6 +950,10 @@ def trainer(conf, trial=False, verbose=True):
         results_dict["egrad_mae"].append(egmae) # horizontal gradient mae
         results_dict["emse_extreme_outp"].append(emse_x) # mse for extremes (ML vs era5)
         results_dict["emse_extreme_cesm"].append(emse_x_) # mse for extremes (cesm vs era5)
+        results_dict["eland_mae"].append(vlnd_mae) # mae over land only
+        results_dict["eland_mae_cust"].append(vlnd_maec) # mae over land only (ratio with cesm)
+        results_dict["eland_mse"].append(vlnd_mse) # mse over land only
+        results_dict["eland_mse_cust"].append(vlnd_msec) # mse over land only (ratio with cesm)
         
         # other metrics (evaluation set)
         for k, v in emetrics.items():
@@ -861,13 +980,13 @@ def trainer(conf, trial=False, verbose=True):
             if isinstance(callback_direction, list):
                 metric_index = np.random.choice(len(callback_metric))
                 metric_callback_direction = callback_direction[metric_index]
-                saving_metric_option = callback_metric[metric_index]
+                metric = callback_metric[metric_index]
             else:
                 metric_index = 0
                 metric_callback_direction = callback_direction
-                saving_metric_option = callback_metric
+                metric = callback_metric
         
-        sign = False if "min" in metric_callback_direction else True
+        sign = False if "minimize" in metric_callback_direction else True
         best_costs.sort(key = lambda x: x[1][metric_index], reverse=sign)
         best_epoch, best_cost = best_costs[0] # this zero is fine
         offset = epoch - best_epoch
@@ -885,7 +1004,7 @@ def trainer(conf, trial=False, verbose=True):
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                     "training_loss": conf["trainer"]["training_loss"],
-                    "callback_metric": saving_metric_option,
+                    "callback_metric_choice": metric,
                 }
                 
                 torch.save(state_dict, 
@@ -900,8 +1019,12 @@ def trainer(conf, trial=False, verbose=True):
     results = {k: v[best_epoch] for k, v in results_dict.items()}
     
     if last_images:
-        gen_images_only(model, valid_loader, nc, epoch, trial_number, save_loc, var, data_split="valid")
-        gen_images_only(model, tests_loader, nc, epoch, trial_number, save_loc, var, data_split="eval")
+        gen_images_only(
+            model, valid_loader, nc, device, epoch, trial_number, save_loc, var, data_split="valid"
+        )
+        gen_images_only(
+            model, tests_loader, nc, device, epoch, trial_number, save_loc, var, data_split="eval"
+        )
     
     return results
 
