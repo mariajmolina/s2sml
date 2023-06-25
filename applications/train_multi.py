@@ -49,6 +49,24 @@ def device_assignment_using_trials(trl_number):
     return device
 
 
+def gpu_report():
+    """Get the current gpu usage.
+    Returns
+    -------
+    usage: dict
+        Keys are device ids as integers.
+        Values are memory usage as integers in MB.
+    """
+    import subprocess
+    cmd = ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,nounits,noheader"]
+    result = subprocess.check_output(cmd)
+    result = result.decode("utf-8")
+    # Convert lines into a dictionary
+    gpu_memory = [int(x) for x in result.strip().split("\n")]
+    gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
+    return gpu_memory_map
+
+
 def seed_everything(seed=1234):
     """
     Set the seeds for stuff
@@ -532,6 +550,10 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     # place stuff in dictionary
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
     second_metrics_dict = {k: np.mean(v) for k, v in second_metrics_dict.items()}
+    
+    # clear the cached memory from the gpu
+    torch.cuda.empty_cache()
+    gc.collect()
 
     return (val_loss, mse_cust, mae_cust,
             grad_inp_cust, grad_lbl_cust, grad_out_cust, mae_gradient,
@@ -636,6 +658,10 @@ def gen_images_only(model, dataloader, nc, device, epoch, trial_num, save_loc, v
         plt.close()
         
         break # just one set of images needed
+        
+    # clear the cached memory from the gpu
+    torch.cuda.empty_cache()
+    gc.collect()
         
     return
 
@@ -1025,6 +1051,10 @@ def trainer(conf, trial=False, verbose=True):
         gen_images_only(
             model, tests_loader, nc, device, epoch, trial_number, save_loc, var, data_split="eval"
         )
+        
+    # clear the cached memory from the gpu
+    torch.cuda.empty_cache()
+    gc.collect()
     
     return results
 
