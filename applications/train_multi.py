@@ -761,7 +761,8 @@ def trainer(conf, trial=False, verbose=True):
         
         # create train/test data each epoch if random regions used, otherwise, just once for fixed region
         if (epoch == 0 and region == "fixed") or (region == "random") or (region == "quasi") or (
-            epoch == 0 and region == "global"):
+            epoch == 0 and region == "global") or (region == "quasi_global") or (
+            epoch == 0 and region == "global1") or (epoch == 0 and region == "global2"):
         
             train = torch_s2s_dataset.S2SDataset(
                 week=wks,
