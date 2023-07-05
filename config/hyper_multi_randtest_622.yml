@@ -1,0 +1,100 @@
+log: True
+
+# update # update # update # update # update # update
+save_path: "/glade/work/kdagon/s2sml/randtest_622/"
+
+pbs:
+  jobs: 1
+  trials_per_job: 1
+  bash: ["module load conda/latest; conda activate s2sml-env"]
+  batch:
+    N: "s2smlwk3"
+    l: ["select=1:ncpus=64:ngpus=4:mem=480GB", "walltime=12:00:00"] # derecho
+    A: "ACGD0007"
+    q: "main"
+    
+    # update # update # update # update # update # update
+    o: &alias "/glade/work/kdagon/s2sml/randtest_622/out"
+    e: *alias
+
+optuna:
+  storage: "s2s.db"
+  study_name: "vanilla"
+  storage_type: "sqlite"
+  
+  # update # update # update # update # update # update
+  objective: "/glade/work/kdagon/s2sml/applications/train_multi.py"
+  
+  # update # update # update # update # update # update
+  direction: ['minimize', 'minimize', 'minimize']
+  metric: ['vmae_cust', 'vmse_extreme_outp', 'vgrad_mae']
+  
+  n_trials: 10
+  gpu: True
+  sampler:
+    type: "MOTPESampler"
+    n_startup_trials: 10
+    
+  parameters:
+    data:norm:
+      type: "categorical"
+      settings:
+        name: "norm"
+        choices: ["minmax", "negone", "zscore"]
+        
+    data:norm_pixel:
+      type: "categorical"
+      settings:
+        name: "norm_pixel"
+        choices: [True, False]
+        
+    data:dual_norm:
+      type: "categorical"
+      settings:
+        name: "dual_norm"
+        choices: [True, False]
+        
+    optimizer:lr_scheduler:
+      type: "categorical"
+      settings:
+        name: "lr_scheduler"
+        choices: ["ReduceOnPlateau", "Cosine"]
+        
+    optimizer:learning_rate:
+      type: "loguniform"
+      settings:
+        name: "learning_rate"
+        low: 1.0e-06
+        high: 1.0e-02
+        
+    optimizer:weight_decay:
+      type: "loguniform"
+      settings:
+        name: "weight_decay"
+        low: 1.0e-12
+        high: 1.0e-03
+        
+    trainer:train_batch_size:
+      type: "int"
+      settings:
+        name: "train_batch_size"
+        low: 4
+        high: 256
+        
+    trainer:training_loss:
+      type: "categorical"
+      settings:
+        name: "training_loss"
+        choices: ["mae", "mse", "smooth", "logcosh", "xtanh", "xsigmoid", "huber"]
+        
+    model:name:
+      type: "categorical"
+      settings:
+        name: "model_name"
+        choices: ["unet", "unet++", "manet", "linknet", "fpn", "pspnet", "deeplabv3", "deeplabv3+"]
+
+    model:activation:
+      type: "categorical"
+      settings:
+        name: "activation"
+        choices: ["sigmoid", "tanh", "identity"]
