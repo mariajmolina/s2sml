@@ -6,6 +6,7 @@ import traceback
 import random
 import numpy as np
 import pandas as pd
+import xarray as xr
 import matplotlib.pyplot as plt
 from skimage import filters
 
@@ -16,7 +17,6 @@ import lpips
 from echo.src.base_objective import BaseObjective
 from collections import defaultdict
 
-import tqdm
 import optuna
 import shutil
 
@@ -29,9 +29,48 @@ from s2sml.scheduler import CosineAnnealingWarmupRestarts
 import gc
 from piqa import SSIM
 
-#print('loading cuda')
-is_cuda = torch.cuda.is_available()
-device = torch.device(torch.cuda.current_device()) if is_cuda else torch.device("cpu")
+
+def device_assignment_using_trials():
+    """
+    Assign the device to use
+    """
+    is_cuda = torch.cuda.is_available()
+    
+    if is_cuda:
+        
+        which_gpu = np.argmin([
+            torch.cuda.memory_reserved(0),
+            torch.cuda.memory_reserved(1),
+            torch.cuda.memory_reserved(2),
+            torch.cuda.memory_reserved(3)
+        ])
+        
+        torch.cuda.set_device(int(which_gpu))
+        device = torch.device(which_gpu)
+        torch.randn(1, 3, 12, 12).to(device)
+            
+    else:
+        device = torch.device("cpu")
+        
+    return device
+
+
+def gpu_report():
+    """Get the current gpu usage.
+    Returns
+    -------
+    usage: dict
+        Keys are device ids as integers.
+        Values are memory usage as integers in MB.
+    """
+    import subprocess
+    cmd = ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,nounits,noheader"]
+    result = subprocess.check_output(cmd)
+    result = result.decode("utf-8")
+    # Convert lines into a dictionary
+    gpu_memory = [int(x) for x in result.strip().split("\n")]
+    gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
+    return gpu_memory_map
 
 
 def seed_everything(seed=1234):
@@ -93,6 +132,59 @@ def grab_extremes(lbl_, other, var_):
     return oth_ext, lbl_ext
 
 
+def mae_land_batch(inp, obs, mask, csm=False):
+    """
+    Mean absolute error for masked data.
+    
+    Args:
+        inp: input data
+        obs: label data
+        mask: mask
+        csm: cesm data
+    """
+    if not np.any(csm):
+    
+        masked_inp = inp[xr.where(mask==1, True, False)]
+        masked_obs = obs[xr.where(mask==1, True, False)]
+
+        return np.mean(np.abs(masked_inp - masked_obs))
+    
+    if np.any(csm):
+        
+        masked_inp = inp[xr.where(mask==1, True, False)]
+        masked_csm = csm[xr.where(mask==1, True, False)]
+        masked_obs = obs[xr.where(mask==1, True, False)]
+        
+        return np.mean(np.abs(masked_inp - masked_obs)) / np.mean(
+                       np.abs(masked_csm - masked_obs))
+
+    
+def mse_land_batch(inp, obs, mask, csm=False):
+    """
+    Mean absolute error for masked data.
+    
+    Args:
+        inp: input data
+        obs: label data
+        mask: mask
+        csm: cesm data
+    """
+    if not np.any(csm):
+    
+        masked_inp = inp[xr.where(mask==1, True, False)]
+        masked_obs = obs[xr.where(mask==1, True, False)]
+
+        return ((masked_inp - masked_obs)**2).mean()
+    
+    if np.any(csm):
+        
+        masked_inp = inp[xr.where(mask==1, True, False)]
+        masked_csm = csm[xr.where(mask==1, True, False)]
+        masked_obs = obs[xr.where(mask==1, True, False)]
+        
+        return ((masked_inp - masked_obs)**2).mean() / ((masked_csm - masked_obs)**2).mean()
+    
+
 class SSIMLoss(SSIM):
     """
     Structural Similarity Index
@@ -112,7 +204,7 @@ def reverse_negone(ds, minv, maxv):
     return (((ds + 1) / 2) * (maxv - minv)) + minv
 
 
-def train_one_epoch(model, dataloader, optimizer, criterion, nc, 
+def train_one_epoch(model, dataloader, optimizer, criterion, nc, device,
                     clip=1.0, lr_schedule_name=False, lr_scheduler=False):
     """
     Training function.
@@ -138,9 +230,6 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
     mae_metric_batch = torch.nn.L1Loss().to(device)
     
     # sharpness metric
-    grad_inp = 0.0 # cesm
-    grad_lbl = 0.0 # era5
-    grad_out = 0.0 # ML
     mae_grad = 0.0
     
     # loop through data in the loader
@@ -166,11 +255,6 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
         mae_loss = mae_metric_batch(
             outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
         
-        # sharpness
-        ginp, glbl, gout = avg_grad(img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
-                                    img_label.cpu().detach().numpy().astype(float),
-                                    outputs.cpu().detach().numpy().astype(float))
-        
         # sharpness mae
         ginp_shrp, glbl_shrp, gout_shrp = batch_grad(
                                     img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
@@ -187,9 +271,6 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
         running_loss += loss.item()
         mse_custom += mse_loss.item()
         mae_custom += mae_loss.item()
-        grad_inp += ginp.item()
-        grad_lbl += glbl.item()
-        grad_out += gout.item()
         mae_grad += mae_shrp.item()
         
         if lr_schedule_name == "Cosine":
@@ -199,22 +280,18 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc,
     train_loss = running_loss / len(dataloader)
     mse_cust = mse_custom / len(dataloader)
     mae_cust = mae_custom / len(dataloader)
-    grad_inp_cust = grad_inp / len(dataloader)
-    grad_lbl_cust = grad_lbl / len(dataloader)
-    grad_out_cust = grad_out / len(dataloader)
     mae_gradient = mae_grad / len(dataloader)
-
+    
     # clear the cached memory from the gpu
     torch.cuda.empty_cache()
     gc.collect()
     
-    return (train_loss, mse_cust, mae_cust, 
-            grad_inp_cust, grad_lbl_cust, grad_out_cust, mae_gradient)
+    return (train_loss, mse_cust, mae_cust, mae_gradient)
 
 
 @torch.no_grad()
 def validate(model, dataloader, criterion, metrics, second_metrics, 
-             nc, epoch, trial_num, gen_img, gen_scatter, 
+             nc, device, epoch, trial_num, gen_img, gen_scatter, 
              img_iters, save_loc, var, data_split="valid"):
     """
     Validation function.
@@ -252,14 +329,13 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     mae_metric_batch = torch.nn.L1Loss().to(device)
     
     # sharpness
-    grad_inp = 0.0 # cesm
-    grad_lbl = 0.0 # era5
-    grad_out = 0.0 # ML
     mae_grad = 0.0
     
-    # extremes mse
-    mse_extr_loss = 0.0 # ml vs era5
-    mse_extr_true = 0.0 # cesm vs era5
+    # land only
+    land_mae = 0.0
+    land_mae_cust = 0.0
+    land_mse = 0.0
+    land_mse_cust = 0.0
     
     # loop thru data in loader
     for i, data in enumerate(dataloader):
@@ -355,15 +431,8 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
                 plt.close()
         
         # mse/mae per batch
-        mse_loss = mse_metric_batch(
-            outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
-        mae_loss = mae_metric_batch(
-            outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
-        
-        # sharpness
-        ginp, glbl, gout = avg_grad(img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
-                                    img_label.cpu().detach().numpy().astype(float),
-                                    outputs.cpu().detach().numpy().astype(float))
+        mse_loss = mse_metric_batch(outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        mae_loss = mae_metric_batch(outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
         
         # sharpness mae
         ginp_shrp, glbl_shrp, gout_shrp = batch_grad(
@@ -372,12 +441,32 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
                                     outputs.cpu().detach().numpy().astype(float))
         mae_shrp = np.mean(np.abs(gout_shrp - glbl_shrp)) / np.mean(np.abs(ginp_shrp - glbl_shrp))
         
-        # mse for extreme cases in batch (ml output)
-        out_tmp, lbl_tmp = grab_extremes(img_label, outputs, var)
-        mse_extr_outp = mse_metric_batch(out_tmp, lbl_tmp)
-        # cesm fields
-        img_tmp, lbl_tmp = grab_extremes(img_label, img_noisy[:,nc-1:nc,:,:], var)
-        mse_extr_cesm = mse_metric_batch(img_tmp, lbl_tmp)
+        # mae and mse for land only
+        landmae = mae_land_batch(
+            inp=outputs.cpu().detach().numpy().astype(float),
+            obs=img_label.cpu().detach().numpy().astype(float),
+            mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
+        )
+        
+        landmae_cust = mae_land_batch(
+            inp=outputs.cpu().detach().numpy().astype(float),
+            obs=img_label.cpu().detach().numpy().astype(float),
+            mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
+            csm=img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+        )
+        
+        landmse = mse_land_batch(
+            inp=outputs.cpu().detach().numpy().astype(float),
+            obs=img_label.cpu().detach().numpy().astype(float),
+            mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
+        )
+        
+        landmse_cust = mse_land_batch(
+            inp=outputs.cpu().detach().numpy().astype(float),
+            obs=img_label.cpu().detach().numpy().astype(float),
+            mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
+            csm=img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+        )
 
         # ml model output eval 
         for k, v in metrics.items():
@@ -403,35 +492,38 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
         running_loss += loss.item()
         mse_custom += mse_loss.item()
         mae_custom += mae_loss.item()
-        grad_inp += ginp.item()
-        grad_lbl += glbl.item()
-        grad_out += gout.item()
         mae_grad += mae_shrp.item()
-        mse_extr_loss += mse_extr_outp.item()
-        mse_extr_true += mse_extr_cesm.item()
+        land_mae += landmae.item()
+        land_mae_cust += landmae_cust.item()
+        land_mse += landmse.item()
+        land_mse_cust += landmse_cust.item()
         
     # update running metrics
     val_loss = running_loss / len(dataloader)
     mse_cust = mse_custom / len(dataloader)
     mae_cust = mae_custom / len(dataloader)
-    grad_inp_cust = grad_inp / len(dataloader)
-    grad_lbl_cust = grad_lbl / len(dataloader)
-    grad_out_cust = grad_out / len(dataloader)
     mae_gradient = mae_grad / len(dataloader)
-    mse_ex_loss = mse_extr_loss / len(dataloader)
-    mse_ex_true = mse_extr_true / len(dataloader)
+    lnd_mae = land_mae / len(dataloader)
+    lnd_mae_cust = land_mae_cust / len(dataloader)
+    lnd_mse = land_mse / len(dataloader)
+    lnd_mse_cust = land_mse_cust / len(dataloader)
     
     # place stuff in dictionary
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
     second_metrics_dict = {k: np.mean(v) for k, v in second_metrics_dict.items()}
+    
+    # clear the cached memory from the gpu
+    torch.cuda.empty_cache()
+    gc.collect()
 
-    return (val_loss, mse_cust, mae_cust,
-            grad_inp_cust, grad_lbl_cust, grad_out_cust, mae_gradient,
-            mse_ex_loss, mse_ex_true, metrics_dict, second_metrics_dict)
+    return (val_loss, mse_cust, mae_cust, mae_gradient,
+            lnd_mae, lnd_mae_cust, lnd_mse, lnd_mse_cust,
+            metrics_dict, second_metrics_dict)
 
 
 @torch.no_grad()
-def gen_images_only(model, dataloader, nc, epoch, trial_num, save_loc, var, data_split="valid"):
+def gen_images_only(model, dataloader, nc, device, epoch, 
+                    trial_num, save_loc, var, data_split="valid"):
     """
     Images function.
 
@@ -528,6 +620,10 @@ def gen_images_only(model, dataloader, nc, epoch, trial_num, save_loc, var, data
         
         break # just one set of images needed
         
+    # clear the cached memory from the gpu
+    torch.cuda.empty_cache()
+    gc.collect()
+        
     return
 
 
@@ -541,18 +637,14 @@ def trainer(conf, trial=False, verbose=True):
     valid_batch_size = conf["trainer"]["valid_batch_size"]
     
     epochs = conf["trainer"]["epochs"]
-    batches_per_epoch = conf["trainer"]["batches_per_epoch"]
-
     lr_patience = conf["trainer"]["lr_patience"]
     stopping_patience = conf["trainer"]["stopping_patience"]
-    metric = conf["trainer"]["metric"]
+    callback_metric = conf["trainer"]["metric"]
+    callback_direction = conf["trainer"]["direction"]
     
     nc = conf["model"]["in_channels"]
     feattopo = conf["data"]["feat_topo"]
     featcoord = conf["data"]["feat_coord"]
-    
-    callback_metric = conf["callback_metric"]
-    callback_direction = conf["callback_direction"]
     
     save_loc = conf["save_loc"]
     os.makedirs(save_loc, exist_ok=True)
@@ -582,6 +674,13 @@ def trainer(conf, trial=False, verbose=True):
     norm_pixel = conf["data"]["norm_pixel"]
     dual_norm = conf["data"]["dual_norm"]
     region = conf["data"]["region"]
+    
+    # folder to save trial images
+    trial_number = "" if not trial else int(trial.number)
+    os.makedirs(save_loc+"/trial"+str(trial_number), exist_ok=True)
+    
+    # assign device
+    device = device_assignment_using_trials()
     
     # Load model
     model = load_model(conf["model"]).to(device)
@@ -616,15 +715,13 @@ def trainer(conf, trial=False, verbose=True):
     # dictionary to store final metrics
     results_dict = defaultdict(list)
     
-    # folder to save trial images
-    trial_number = "" if not trial else int(trial.number)
-    os.makedirs(save_loc+"/trial"+str(trial_number), exist_ok=True)
-    
     # train and validate
     for epoch in list(range(epochs)):
         
         # create train/test data each epoch if random regions used, otherwise, just once for fixed region
-        if (epoch == 0 and region == "fixed") or (region == "random") or (region == "quasi"):
+        if (epoch == 0 and region == "fixed") or (region == "random") or (region == "quasi") or (
+            epoch == 0 and region == "global") or (region == "quasi_global") or (
+            epoch == 0 and region == "global1") or (epoch == 0 and region == "global2"):
         
             train = torch_s2s_dataset.S2SDataset(
                 week=wks,
@@ -778,19 +875,19 @@ def trainer(conf, trial=False, verbose=True):
             )
         
         # train
-        tloss, tmsecust, tmaecust, tginp, tglbl, tgout, tgmae = train_one_epoch(
-            model, train_loader, optimizer, train_loss, nc, 
+        tloss, tmsecust, tmaecust, tgmae = train_one_epoch(
+            model, train_loader, optimizer, train_loss, nc, device,
             lr_schedule_name=conf["optimizer"]["lr_scheduler"], lr_scheduler=lr_scheduler
         )
         # validate
-        vloss, vmsecust, vmaecust, vginp, vglbl, vgout, vgmae, vmse_x, vmse_x_, metrics, cesm_metrics = validate(
+        vloss, vmsecust, vmaecust, vgmae, vlnd_mae, vlnd_maec, vlnd_mse, vlnd_msec, metrics, cesm_metrics = validate(
             model, valid_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="valid"
+            nc, device, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="valid"
         )
         # test
-        eloss, emsecust, emaecust, eginp, eglbl, egout, egmae, emse_x, emse_x_, emetrics, cesm_emetrics = validate(
+        eloss, emsecust, emaecust, egmae, elnd_mae, elnd_maec, elnd_mse, elnd_msec, emetrics, cesm_emetrics = validate(
             model, tests_loader, valid_loss, validation_metrics, validation_metrics_cesm, 
-            nc, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="eval"
+            nc, device, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="eval"
         )
         
         assert np.isfinite(vloss), "Something is wrong, the validation loss is NaN"
@@ -803,21 +900,17 @@ def trainer(conf, trial=False, verbose=True):
         results_dict["train_loss"].append(tloss) # loss from echo/optuna
         results_dict["tmse_cust"].append(tmsecust) # mse (ML/era5//cesm/era5)
         results_dict["tmae_cust"].append(tmaecust) # mae (ML/era5//cesm/era5)
-        results_dict["tgrad_inp"].append(tginp) # horizontal gradient (cesm)
-        results_dict["tgrad_lbl"].append(tglbl) # horizontal gradient (era5)
-        results_dict["tgrad_out"].append(tgout) # horizontal gradient (ML)
         results_dict["tgrad_mae"].append(tgmae) # horizontal gradient mae 
         
         # validation set
         results_dict["valid_loss"].append(vloss) # loss from echo/optuna
         results_dict["vmse_cust"].append(vmsecust) # mse (ML/era5//cesm/era5)
         results_dict["vmae_cust"].append(vmaecust) # mae (ML/era5//cesm/era5)
-        results_dict["vgrad_inp"].append(vginp) # horizontal gradient (cesm)
-        results_dict["vgrad_lbl"].append(vglbl) # horizontal gradient (era5)
-        results_dict["vgrad_out"].append(vgout) # horizontal gradient (ML)
-        results_dict["vgrad_mae"].append(vgmae) # horizontal gradient mae 
-        results_dict["vmse_extreme_outp"].append(vmse_x) # mse for extremes (ML vs era5)
-        results_dict["vmse_extreme_cesm"].append(vmse_x_) # mse for extremes (cesm vs era5)
+        results_dict["vgrad_mae"].append(vgmae) # horizontal gradient mae
+        results_dict["vland_mae"].append(vlnd_mae) # mae over land only
+        results_dict["vland_mae_cust"].append(vlnd_maec) # mae over land only (ratio with cesm)
+        results_dict["vland_mse"].append(vlnd_mse) # mse over land only
+        results_dict["vland_mse_cust"].append(vlnd_msec) # mse over land only (ratio with cesm)
         
         # other metrics (validation set)
         for k, v in metrics.items():
@@ -829,12 +922,11 @@ def trainer(conf, trial=False, verbose=True):
         results_dict["evals_loss"].append(eloss) # loss from echo/optuna
         results_dict["emse_cust"].append(emsecust) # mse (ML/era5//cesm/era5)
         results_dict["emae_cust"].append(emaecust) # mae (ML/era5//cesm/era5)
-        results_dict["egrad_inp"].append(eginp) # horizontal gradient (cesm)
-        results_dict["egrad_lbl"].append(eglbl) # horizontal gradient (era5)
-        results_dict["egrad_out"].append(egout) # horizontal gradient (ML)
         results_dict["egrad_mae"].append(egmae) # horizontal gradient mae
-        results_dict["emse_extreme_outp"].append(emse_x) # mse for extremes (ML vs era5)
-        results_dict["emse_extreme_cesm"].append(emse_x_) # mse for extremes (cesm vs era5)
+        results_dict["eland_mae"].append(vlnd_mae) # mae over land only
+        results_dict["eland_mae_cust"].append(vlnd_maec) # mae over land only (ratio with cesm)
+        results_dict["eland_mse"].append(vlnd_mse) # mse over land only
+        results_dict["eland_mse_cust"].append(vlnd_msec) # mse over land only (ratio with cesm)
         
         # other metrics (evaluation set)
         for k, v in emetrics.items():
@@ -845,7 +937,12 @@ def trainer(conf, trial=False, verbose=True):
         # number of ML model parameters and trainable parameters, respectively
         results_dict["total_params"].append(sum(p.numel() for p in model.parameters()))
         results_dict["train_params"].append(sum(p.numel() for p in model.parameters() if p.requires_grad))
-
+        
+        # choose metric/direction for stopping during first epoch
+        if epoch > 0:
+            results_dict["callback_metric"].append(metric) # save the metric choice
+            results_dict["callback_direction"].append(metric_callback_direction) # save the metric choice
+            
         # Save the dataframe to disk
         df = pd.DataFrame.from_dict(results_dict).reset_index()
         if verbose:
@@ -858,16 +955,20 @@ def trainer(conf, trial=False, verbose=True):
         
         # choose metric/direction for stopping during first epoch
         if epoch == 0:
+            
             if isinstance(callback_direction, list):
                 metric_index = np.random.choice(len(callback_metric))
                 metric_callback_direction = callback_direction[metric_index]
-                saving_metric_option = callback_metric[metric_index]
+                metric = callback_metric[metric_index]
             else:
                 metric_index = 0
                 metric_callback_direction = callback_direction
-                saving_metric_option = callback_metric
+                metric = callback_metric
         
-        sign = False if "min" in metric_callback_direction else True
+            results_dict["callback_metric"].append(metric) # save the metric choice
+            results_dict["callback_direction"].append(metric_callback_direction) # save the metric choice
+        
+        sign = False if "minimize" in metric_callback_direction else True
         best_costs.sort(key = lambda x: x[1][metric_index], reverse=sign)
         best_epoch, best_cost = best_costs[0] # this zero is fine
         offset = epoch - best_epoch
@@ -885,7 +986,7 @@ def trainer(conf, trial=False, verbose=True):
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                     "training_loss": conf["trainer"]["training_loss"],
-                    "callback_metric": saving_metric_option,
+                    "callback_metric_choice": metric,
                 }
                 
                 torch.save(state_dict, 
@@ -893,15 +994,27 @@ def trainer(conf, trial=False, verbose=True):
             
             break
     
-    if trial is False:
-        return pd.DataFrame.from_dict(results_dict).reset_index()
+    # save best epoch for future training
+    with open(f"{save_loc}/trial{str(trial_number)}/best_epoch.txt", "w") as f:
+        f.write(str(best_epoch))
     
     # return the results from the respective dictionary
     results = {k: v[best_epoch] for k, v in results_dict.items()}
     
     if last_images:
-        gen_images_only(model, valid_loader, nc, epoch, trial_number, save_loc, var, data_split="valid")
-        gen_images_only(model, tests_loader, nc, epoch, trial_number, save_loc, var, data_split="eval")
+        gen_images_only(
+            model, valid_loader, nc, device, epoch, trial_number, save_loc, var, data_split="valid"
+        )
+        gen_images_only(
+            model, tests_loader, nc, device, epoch, trial_number, save_loc, var, data_split="eval"
+        )
+        
+    logging.warning(torch.cuda.memory_summary())
+    
+    # clear the cached memory from the gpu
+    model = None
+    gc.collect()
+    torch.cuda.empty_cache()
     
     return results
 
@@ -920,10 +1033,17 @@ class Objective(BaseObjective):
         except Exception as E:
             
             if "CUDA" in str(E) or "cuDNN" in str(E):
+                
                 logging.warning(
                     f"Pruning trial {trial.number} due to CUDA memory overflow: {str(E)}."
                 )
                 logging.warning(traceback.print_tb(E.__traceback__))
+                
+                logging.warning(torch.cuda.memory_summary())
+                
+                gc.collect()
+                torch.cuda.empty_cache() # emptying again
+                
                 raise optuna.TrialPruned()
                 
             elif "Xception" in str(E) or "VGG" in str(E) or "Given input size:" in str(E) or "downsampling" in str(E):
@@ -944,39 +1064,6 @@ class Objective(BaseObjective):
                 logging.warning(f"Trial {trial.number} failed due to error: {str(E)}.")
                 logging.warning(traceback.print_tb(E.__traceback__))
                 raise E
-
-
-def launch_pbs_jobs(config, save_path="./"):
-    from pathlib import Path
-    import subprocess
-
-    script_path = Path(__file__).absolute()
-    script = f"""
-    #!/bin/bash -l
-    #PBS -N holo-trainer
-    #PBS -l select=1:ncpus=8:ngpus=1:mem=128GB
-    #PBS -l walltime=24:00:00
-    #PBS -l gpu_type=v100
-    #PBS -A NAML0001
-    #PBS -q casper
-    #PBS -o {os.path.join(save_path, "out")}
-    #PBS -e {os.path.join(save_path, "out")}
-
-    source ~/.bashrc
-    ncar_pylib /glade/work/$USER/py37
-    python {script_path} {config}
-    """
-    with open("launcher.sh", "w") as fid:
-        fid.write(script)
-    jobid = subprocess.Popen(
-        "qsub launcher.sh",
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ).communicate()[0]
-    jobid = jobid.decode("utf-8").strip("\n")
-    print(jobid)
-    os.remove("launcher.sh")
 
 
 if __name__ == "__main__":

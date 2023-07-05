@@ -76,9 +76,21 @@ class S2SDataset(Dataset):
             self.dxdy=dxdy
             self.lon0, self.lat0=self.quasi_coords()
             
+        if self.region_ == 'quasi_global':
+            self.dxdy=180
+            self.lon0, self.lat0=self.quasi_global()
+            
         if self.region_ == 'global':
             self.dxdy=360
             self.lon0, self.lat0=0.0, -90.0
+            
+        if self.region_ == 'global1':
+            self.dxdy=180
+            self.lon0, self.lat0=0.0, -90.0
+            
+        if self.region_ == 'global2':
+            self.dxdy=180
+            self.lon0, self.lat0=179.0, -90.0
             
         self.feat_topo=feat_topo
         self.feat_lats=feat_lats
@@ -188,13 +200,21 @@ class S2SDataset(Dataset):
             img = xr.concat([self.coord_data['cesm']],dim='feature')
         
         lbl = xr.concat([self.coord_data['era5']],dim='feature') # label
+        lsm = self.lmask # lsm
         
         if self.region_ == 'global':
             img = img.pad(pad_width={'x':[12,12],'y':[6,5]}, constant_values=0.0)
             lbl = lbl.pad(pad_width={'x':[12,12],'y':[6,5]}, constant_values=0.0)
+            lsm = lsm.pad(pad_width={'x':[12,12],'y':[6,5]}, constant_values=0.0)
+            
+        if self.region_ == 'global1' or self.region_ == 'global2' or self.region_ == 'quasi_global':
+            img = img.pad(pad_width={'x':[6,5],'y':[6,5]}, constant_values=0.0)
+            lbl = lbl.pad(pad_width={'x':[6,5],'y':[6,5]}, constant_values=0.0)
+            lsm = lsm.pad(pad_width={'x':[6,5],'y':[6,5]}, constant_values=0.0)
             
         return {'input': img.transpose('feature','sample','x','y').values, 
-                'label': lbl.transpose('feature','sample','x','y').values}
+                'label': lbl.transpose('feature','sample','x','y').values,
+                'lmask': lsm.transpose('sample','x','y').values}
     
     
     def leadtime_help(self):
@@ -245,6 +265,22 @@ class S2SDataset(Dataset):
         """
         lon_quasi = [190, 230, 262, 280, 280, 112, 110, 125,  0, 60, 0,  10]
         lat_quasi = [ 45,  25,  24, -23, -55,  22, -12, -44, 35,  5, 0, -35]
+
+        rand_indx = np.random.choice(len(lon_quasi), replace=False)
+
+        ax = lon_quasi[rand_indx]
+        by = lat_quasi[rand_indx]
+
+        return ax, by
+    
+    
+    def quasi_global(self):
+        """
+        Get quasi-random global coords.
+        Returns lon0, lat0.
+        """
+        lon_quasi = [  0.0, 179.0]
+        lat_quasi = [-90.0, -90.0]
 
         rand_indx = np.random.choice(len(lon_quasi), replace=False)
 
@@ -564,6 +600,10 @@ class S2SDataset(Dataset):
         # coordinates (terrain and lat/lon features)
         tmpcd = xr.open_dataset(self.homedir+'/ml_coordsv2.nc').expand_dims('sample')
         self.coord_data = self.box_cutter(tmpcd)
+        
+        # coordinates (terrain and lat/lon features)
+        lmask = xr.open_dataset(self.homedir+'/era5_lsmask.nc').expand_dims('sample')
+        self.lmask = self.box_cutter(lmask)['lsm']
         
         # open files using lists and indices
         imgtr = xr.open_mfdataset(self.list_of_cesm[indx], concat_dim='sample', combine='nested')[var]
