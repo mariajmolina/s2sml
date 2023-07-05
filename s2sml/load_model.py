@@ -22,7 +22,7 @@ supported_encoders = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet15
 
 def load_model(model_conf):
     model_conf = copy.deepcopy(model_conf)
-    name = model_conf.pop("name")
+    name = model_conf.pop("model_name")
     if name in supported_models:
         logging.info(f"Loading model {name} with settings {model_conf}")
         return supported_models[name](**model_conf)
