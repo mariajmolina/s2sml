@@ -85,7 +85,7 @@ optuna:
         name: "training_loss"
         choices: ["mae", "mse", "smooth", "logcosh", "xtanh", "xsigmoid", "huber"]
         
-    model:name:
+    model:model_name:
       type: "categorical"
       settings:
         name: "model_name"

@@ -32,7 +32,7 @@ data:
   feat_coord: True
 
 model:
-  name: "unet"
+  model_name: "unet"
   classes: 1
   activation: "sigmoid"
   
