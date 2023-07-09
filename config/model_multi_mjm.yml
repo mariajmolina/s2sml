@@ -1,7 +1,5 @@
-seed: 1000
-
-# update # update # update # update # update # update
-save_loc: "/glade/work/molina/studies/t2_global3_tpcd/echo_stuff/"
+seed: 150 # 50 # 10 # 100 # 1000
+save_loc: "/glade/work/molina/studies/t2_global3_tpcd_tpe/echo_stuff/" # update # update # update # update # update
 
 # images generated every other img_iter (don't make zero! 'epoch divisible by')
 # e.g., make 1 if image wanted every epoch; 5 if every fifth epoch, etc.
@@ -12,32 +10,25 @@ img_iter: 5
 only_last_img: True
 save_models: False
 
-callback_direction: ['min', 'min', 'min']
-callback_metric: ['vmae_cust', 'vmse_extreme_outp', 'vgrad_mae']
-
 data:
   homedir: '/glade/derecho/scratch/molina/'
-  dxdy: 351
+  dxdy: 360
   lon0: 0.0
-  lat0: -69.0
+  lat0: -90.0
   norm: "minmax"
   norm_pixel: False
   dual_norm: False
-  region: "fixed"
-  
-  # update # update # update # update # update # update
-  var: "tas2m"
-  wks: 3
+  region: "global"
+  var: "tas2m" # update
+  wks: 3 # update
   feat_topo: True
-  feat_coord: True
+  feat_coord: True #update
 
 model:
   model_name: "unet"
   classes: 1
   activation: "sigmoid"
-  
-  # update # update # update # update # update # update
-  in_channels: 4
+  in_channels: 4 # update # update # update # update # update # update
 
 optimizer:
   learning_rate: 0.001
@@ -52,5 +43,5 @@ trainer:
   lr_patience: 2
   stopping_patience: 5
   training_loss: "smooth"
-  metric: "valid_mae"
-  direction: "minimize"
+  metric: ["vmae_cust", "vland_mse", "vgrad_mae"]
+  direction: ["minimize", "minimize", "minimize"]
