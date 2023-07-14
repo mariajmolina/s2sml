@@ -27,7 +27,7 @@ dependencies:
       - alembic==1.10.3
       - cmaes==0.9.1
       - colorlog==6.7.0
-      - echo-opt==1.0.2
+      - git+https://github.com/mariajmolina/echo-opt
       - greenlet==2.0.2
       - lpips==0.1.4
       - mako==1.2.4

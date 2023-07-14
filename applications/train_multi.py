@@ -1,24 +1,26 @@
 import os
 import sys
+import gc
+import shutil
 import yaml
 import logging
 import traceback
 import random
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
-from skimage import filters
 
+from skimage import filters
 import torch
 from torch.utils.data import DataLoader
-import lpips
-
-from echo.src.base_objective import BaseObjective
-from collections import defaultdict
-
 import optuna
-import shutil
+from echo.src.base_objective import BaseObjective
+
+import lpips
+from piqa import SSIM
 
 import s2sml.torch_s2s_dataset as torch_s2s_dataset
 from s2sml.load_loss import load_loss
@@ -26,51 +28,14 @@ from s2sml.load_model import load_model
 from s2sml.pareto import pareto_front
 from s2sml.scheduler import CosineAnnealingWarmupRestarts
 
-import gc
-from piqa import SSIM
-
 
 def device_assignment_using_trials():
     """
     Assign the device to use
     """
     is_cuda = torch.cuda.is_available()
-    
-    if is_cuda:
-        
-        which_gpu = np.argmin([
-            torch.cuda.memory_reserved(0),
-            torch.cuda.memory_reserved(1),
-            torch.cuda.memory_reserved(2),
-            torch.cuda.memory_reserved(3)
-        ])
-        
-        torch.cuda.set_device(int(which_gpu))
-        device = torch.device(which_gpu)
-        torch.randn(1, 3, 12, 12).to(device)
-            
-    else:
-        device = torch.device("cpu")
-        
+    device = torch.device(torch.cuda.current_device()) if is_cuda else torch.device("cpu")
     return device
-
-
-def gpu_report():
-    """Get the current gpu usage.
-    Returns
-    -------
-    usage: dict
-        Keys are device ids as integers.
-        Values are memory usage as integers in MB.
-    """
-    import subprocess
-    cmd = ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,nounits,noheader"]
-    result = subprocess.check_output(cmd)
-    result = result.decode("utf-8")
-    # Convert lines into a dictionary
-    gpu_memory = [int(x) for x in result.strip().split("\n")]
-    gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
-    return gpu_memory_map
 
 
 def seed_everything(seed=1234):
@@ -87,17 +52,6 @@ def seed_everything(seed=1234):
         torch.backends.cudnn.deterministic = True
 
 
-def avg_grad(X, T, Y):
-    """Average Magnitude of the Gradient
-    (from AI2ES sharpness repo)
-    
-    Edge magnitude is computed as:
-        sqrt(Gx^2 + Gy^2)
-    """
-    def _f(x): return np.mean(filters.sobel(x))
-    return _f(X), _f(T), _f(Y)
-
-
 def batch_grad(X, T, Y):
     """Average Magnitude of the Gradient
     (from AI2ES sharpness repo)
@@ -107,29 +61,6 @@ def batch_grad(X, T, Y):
     """
     def _f(x): return filters.sobel(x)
     return _f(X), _f(T), _f(Y)
-
-
-def grab_extremes(lbl_, other, var_):
-    """
-    Grab most `extreme` samples from batch labels.
-    Grab corresponding input or ml output for mse.
-    
-    Args:
-        lbl_: labels
-        other: other data
-        var_: variable; string
-    """
-    # use both max and min for temp
-    if var_ == "tas2m":
-        lbl_ext = lbl_[torch.where((lbl_==lbl_.max())|(lbl_==lbl_.min()))[0]]
-        oth_ext = other[torch.where((lbl_==lbl_.max())|(lbl_==lbl_.min()))[0]]
-    
-    # only use max for precip
-    elif var_ == "prsfc":
-        lbl_ext = lbl_[torch.where(lbl_==lbl_.max())[0]]
-        oth_ext = other[torch.where(lbl_==lbl_.max())[0]]
-        
-    return oth_ext, lbl_ext
 
 
 def mae_land_batch(inp, obs, mask, csm=False):
@@ -197,13 +128,6 @@ class SSIMLoss(SSIM):
             return -10
 
 
-def reverse_negone(ds, minv, maxv):
-    """
-    Reversal of the negative one to positive one scaling
-    """
-    return (((ds + 1) / 2) * (maxv - minv)) + minv
-
-
 def train_one_epoch(model, dataloader, optimizer, criterion, nc, device,
                     clip=1.0, lr_schedule_name=False, lr_scheduler=False):
     """
@@ -226,8 +150,8 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, device,
     # mse/mae per batch
     mse_custom = 0.0
     mae_custom = 0.0
-    mse_metric_batch = torch.nn.MSELoss().to(device)
-    mae_metric_batch = torch.nn.L1Loss().to(device)
+    mse_metric_batch = torch.nn.MSELoss()
+    mae_metric_batch = torch.nn.L1Loss()
     
     # sharpness metric
     mae_grad = 0.0
@@ -244,23 +168,27 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, device,
         img_label = img_label.to(device, dtype=torch.float)
         
         optimizer.zero_grad() # set the gradients to zero
-        
         outputs = model(img_noisy) # predict using the ML model
-        
         loss = criterion(outputs, img_label) # loss: ML vs labels
         
         # mse/mae per batch
         mse_loss = mse_metric_batch(
-            outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+            outputs.cpu().detach(), img_label.cpu().detach()) / mse_metric_batch(
+            img_noisy[:,nc-1:nc,:,:].cpu().detach(), img_label.cpu().detach()
+        )
         mae_loss = mae_metric_batch(
-            outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+            outputs.cpu().detach(), img_label.cpu().detach()) / mae_metric_batch(
+            img_noisy[:,nc-1:nc,:,:].cpu().detach(), img_label.cpu().detach()
+        )
         
         # sharpness mae
         ginp_shrp, glbl_shrp, gout_shrp = batch_grad(
-                                    img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
-                                    img_label.cpu().detach().numpy().astype(float),
-                                    outputs.cpu().detach().numpy().astype(float))
-        mae_shrp = np.mean(np.abs(gout_shrp - glbl_shrp)) / np.mean(np.abs(ginp_shrp - glbl_shrp))
+            img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+            img_label.cpu().detach().numpy().astype(float),
+            outputs.cpu().detach().numpy().astype(float)
+        )
+        mae_shrp = np.mean(
+            np.abs(gout_shrp - glbl_shrp)) / np.mean(np.abs(ginp_shrp - glbl_shrp))
         
         # update weights
         loss.backward()
@@ -281,10 +209,6 @@ def train_one_epoch(model, dataloader, optimizer, criterion, nc, device,
     mse_cust = mse_custom / len(dataloader)
     mae_cust = mae_custom / len(dataloader)
     mae_gradient = mae_grad / len(dataloader)
-    
-    # clear the cached memory from the gpu
-    torch.cuda.empty_cache()
-    gc.collect()
     
     return (train_loss, mse_cust, mae_cust, mae_gradient)
 
@@ -431,15 +355,19 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
                 plt.close()
         
         # mse/mae per batch
-        mse_loss = mse_metric_batch(outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
-        mae_loss = mae_metric_batch(outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        mse_loss = mse_metric_batch(
+            outputs, img_label) / mse_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
+        mae_loss = mae_metric_batch(
+            outputs, img_label) / mae_metric_batch(img_noisy[:,nc-1:nc,:,:], img_label)
         
         # sharpness mae
         ginp_shrp, glbl_shrp, gout_shrp = batch_grad(
-                                    img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
-                                    img_label.cpu().detach().numpy().astype(float),
-                                    outputs.cpu().detach().numpy().astype(float))
-        mae_shrp = np.mean(np.abs(gout_shrp - glbl_shrp)) / np.mean(np.abs(ginp_shrp - glbl_shrp))
+            img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
+            img_label.cpu().detach().numpy().astype(float),
+            outputs.cpu().detach().numpy().astype(float)
+        )
+        mae_shrp = np.mean(
+            np.abs(gout_shrp - glbl_shrp)) / np.mean(np.abs(ginp_shrp - glbl_shrp))
         
         # mae and mse for land only
         landmae = mae_land_batch(
@@ -447,27 +375,24 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
             obs=img_label.cpu().detach().numpy().astype(float),
             mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
         )
-        
         landmae_cust = mae_land_batch(
             inp=outputs.cpu().detach().numpy().astype(float),
             obs=img_label.cpu().detach().numpy().astype(float),
             mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
             csm=img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
         )
-        
         landmse = mse_land_batch(
             inp=outputs.cpu().detach().numpy().astype(float),
             obs=img_label.cpu().detach().numpy().astype(float),
             mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
         )
-        
         landmse_cust = mse_land_batch(
             inp=outputs.cpu().detach().numpy().astype(float),
             obs=img_label.cpu().detach().numpy().astype(float),
             mask=data["lmask"].squeeze(dim=2).cpu().detach().numpy().astype(float),
             csm=img_noisy[:,nc-1:nc,:,:].cpu().detach().numpy().astype(float),
         )
-
+        
         # ml model output eval 
         for k, v in metrics.items():
             try:
@@ -485,8 +410,9 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
                       img_label).cpu().numpy().mean().item()
                 )
             except AttributeError:  # AttributeError
-                second_metrics_dict[k].append(v(img_noisy[:, nc - 1 : nc, :, :], 
-                                                img_label))
+                second_metrics_dict[k].append(
+                    v(img_noisy[:, nc - 1 : nc, :, :], img_label)
+                )
         
         # update metrics
         running_loss += loss.item()
@@ -511,10 +437,6 @@ def validate(model, dataloader, criterion, metrics, second_metrics,
     # place stuff in dictionary
     metrics_dict = {k: np.mean(v) for k, v in metrics_dict.items()}
     second_metrics_dict = {k: np.mean(v) for k, v in second_metrics_dict.items()}
-    
-    # clear the cached memory from the gpu
-    torch.cuda.empty_cache()
-    gc.collect()
 
     return (val_loss, mse_cust, mae_cust, mae_gradient,
             lnd_mae, lnd_mae_cust, lnd_mse, lnd_mse_cust,
@@ -618,11 +540,7 @@ def gen_images_only(model, dataloader, nc, device, epoch,
             bbox_inches='tight')
         plt.close()
         
-        break # just one set of images needed
-        
-    # clear the cached memory from the gpu
-    torch.cuda.empty_cache()
-    gc.collect()
+        break
         
     return
 
@@ -646,12 +564,11 @@ def trainer(conf, trial=False, verbose=True):
     feattopo = conf["data"]["feat_topo"]
     featcoord = conf["data"]["feat_coord"]
     
+    homedir = conf["data"]["homedir"]
     save_loc = conf["save_loc"]
     os.makedirs(save_loc, exist_ok=True)
     if not os.path.join(save_loc, "model.yml"):
         shutil.copyfile(config, os.path.join(save_loc, "model.yml"))
-        
-    homedir = conf["data"]["homedir"]
     
     # whether to generate image output and frequency
     gen_img = conf["img_gen"]
@@ -684,7 +601,7 @@ def trainer(conf, trial=False, verbose=True):
     
     # Load model
     model = load_model(conf["model"]).to(device)
-
+    
     # Optimizer
     optimizer = torch.optim.AdamW(
         model.parameters(),
@@ -769,7 +686,7 @@ def trainer(conf, trial=False, verbose=True):
                     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                         optimizer, patience=lr_patience, verbose=verbose, min_lr=1.0e-13
                     )
-
+            
             if not norm or norm == "None":
                 
                 # min-max
@@ -811,7 +728,7 @@ def trainer(conf, trial=False, verbose=True):
                 tsig = train.std_val
                 tmu_inp = train.mean_inp
                 tsig_inp = train.std_inp
-
+            
             valid = torch_s2s_dataset.S2SDataset(
                 week=wks,
                 variable=var,
@@ -837,7 +754,7 @@ def trainer(conf, trial=False, verbose=True):
                 enddt="2017-12-31",
                 homedir=homedir,
             )
-
+            
             tests = torch_s2s_dataset.S2SDataset(
                 week=wks,
                 variable=var,
@@ -863,7 +780,7 @@ def trainer(conf, trial=False, verbose=True):
                 enddt="2020-12-31",
                 homedir=homedir,
             )
-
+            
             train_loader = DataLoader(
                 train, batch_size=train_batch_size, shuffle=True, drop_last=True
             )
@@ -890,17 +807,21 @@ def trainer(conf, trial=False, verbose=True):
             nc, device, epoch, trial_number, gen_img, gen_scatter, img_iters, save_loc, var, data_split="eval"
         )
         
-        assert np.isfinite(vloss), "Something is wrong, the validation loss is NaN"
+        if not np.isfinite(vloss):
+            print("Something is wrong with the validation")
+            raise optuna.TrialPruned()
         
         # place metrics from the training and validation in the dictionary to save out
         results_dict["epoch"].append(epoch) # the epoch
-        results_dict["lr"].append(optimizer.param_groups[0]["lr"]) # learning rate
+        
+        optlr = float(optimizer.param_groups[0]["lr"])
+        results_dict["lr"].append(optlr) # learning rate
         
         # training set
         results_dict["train_loss"].append(tloss) # loss from echo/optuna
         results_dict["tmse_cust"].append(tmsecust) # mse (ML/era5//cesm/era5)
         results_dict["tmae_cust"].append(tmaecust) # mae (ML/era5//cesm/era5)
-        results_dict["tgrad_mae"].append(tgmae) # horizontal gradient mae 
+        results_dict["tgrad_mae"].append(tgmae) # horizontal gradient mae
         
         # validation set
         results_dict["valid_loss"].append(vloss) # loss from echo/optuna
@@ -990,8 +911,8 @@ def trainer(conf, trial=False, verbose=True):
                 }
                 
                 torch.save(state_dict, 
-                           f"{save_loc}/trial{str(trial_number)}/model_{str(trial_number)}.pt")
-            
+                           f"{save_loc}/trial{str(trial_number)}/model_{str(trial_number)}.pt"
+                          )
             break
     
     # save best epoch for future training
@@ -1008,26 +929,29 @@ def trainer(conf, trial=False, verbose=True):
         gen_images_only(
             model, tests_loader, nc, device, epoch, trial_number, save_loc, var, data_split="eval"
         )
-        
-    logging.warning(torch.cuda.memory_summary())
     
     # clear the cached memory from the gpu
-    model = None
     gc.collect()
     torch.cuda.empty_cache()
+    
+    logging.warning(torch.cuda.memory_summary())
     
     return results
 
 
 class Objective(BaseObjective):
-    def __init__(self, config, metric="val_loss", device="cpu"):
+    
+    # assign device
+    device = device_assignment_using_trials()
+    
+    def __init__(self, config, metric="val_loss", device=device):
 
         # Initialize the base class
         BaseObjective.__init__(self, config, metric, device)
 
     def train(self, trial, conf):
         
-        try:
+        try:    
             return trainer(conf, trial=trial, verbose=True)
         
         except Exception as E:
@@ -1038,11 +962,10 @@ class Objective(BaseObjective):
                     f"Pruning trial {trial.number} due to CUDA memory overflow: {str(E)}."
                 )
                 logging.warning(traceback.print_tb(E.__traceback__))
-                
                 logging.warning(torch.cuda.memory_summary())
                 
                 gc.collect()
-                torch.cuda.empty_cache() # emptying again
+                torch.cuda.empty_cache()
                 
                 raise optuna.TrialPruned()
                 
@@ -1089,5 +1012,3 @@ if __name__ == "__main__":
         conf = yaml.load(cf, Loader=yaml.FullLoader)
     
     results = trainer(conf)
-    
-    print(results)
