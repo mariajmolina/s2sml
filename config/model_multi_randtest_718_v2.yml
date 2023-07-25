@@ -1,0 +1,47 @@
+seed: 150 # 50 # 10 # 100 # 1000
+save_loc: "/glade/work/kdagon/s2sml/randtest_718_v2/echo_opt/" # update # update # update # update # update
+
+# images generated every other img_iter (don't make zero! 'epoch divisible by')
+# e.g., make 1 if image wanted every epoch; 5 if every fifth epoch, etc.
+
+img_gen: False
+scatter_gen: False
+img_iter: 5
+only_last_img: True
+save_models: False
+
+data:
+  homedir: '/glade/derecho/scratch/molina/'
+  dxdy: 31
+  lon0: 280.0
+  lat0: -55.0
+  norm: "minmax"
+  norm_pixel: False
+  dual_norm: False
+  region: "fixed" # update
+  var: "tas2m" # update
+  wks: 3 # update
+  feat_topo: True
+  feat_coord: True #update
+
+model:
+  model_name: "unet"
+  classes: 1
+  activation: "sigmoid"
+  in_channels: 4 # update # update # update # update # update # update
+
+optimizer:
+  learning_rate: 0.001
+  weight_decay: 0.0
+  lr_scheduler: "ReduceOnPlateau"
+
+trainer:
+  epochs: 100
+  train_batch_size: 32
+  valid_batch_size: 32
+  batches_per_epoch: 100
+  lr_patience: 2
+  stopping_patience: 5
+  training_loss: "smooth"
+  metric: ["vmae_cust", "vland_mse", "vgrad_mae"]
+  direction: ["minimize", "minimize", "minimize"]
