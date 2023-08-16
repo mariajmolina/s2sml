@@ -16,3 +16,6 @@ dependencies:
   - xarray=2023.3.0
   - xesmf=0.7.1
   - xskillscore=0.0.24
+  - scipy=1.9.1
+  - scikit-learn=1.1.2
+  - properscoring=0.1
