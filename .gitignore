@@ -1,2 +1,4 @@
 notebooks/EnsembleEvaluation/Figures/
 notebooks/EnsembleEvaluation/OutputEvaluation/
+notebooks/EnsembleEvaluation/.ipynb_checkpoints/
+notebooks/EnsembleEvaluation/__pycache__/
